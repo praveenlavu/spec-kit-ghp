@@ -1,8 +1,8 @@
 # Catalog submission (DRAFT)
 
-**DRAFT. Nothing is published.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
-Whether to publish is the owner's decision, and it has not been made. No release exists: the addresses below point at a tag, `v0.1.0`, that has not been created.
-Anything marked **TO CONFIRM** must be filled in or checked against the real release before it is filed. Nothing on this page is a result: it is a form, filled in ahead.
+**DRAFT. Nothing is filed with Spec Kit.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
+Whether to publish is the owner's decision, and it has not been made. The release `v0.1.0` exists, and the addresses below were installed from it (see the Testing Details of each form).
+Boxes are ticked only for what was done against the published release; every box left empty is a judgement for the person filing.
 
 **Two different numbers.** The catalog entry counts the extension's **slash commands**, from `extension.yml`: 13 commands (`speckit.ghp.*`) and 2 hooks. The `ghp` program is a separate thing with 21 commands of its own (`ghp --help`); those are not counted in any form.
 
@@ -23,7 +23,7 @@ Anything marked **TO CONFIRM** must be filled in or checked against the real rel
 | `catalog/workflows.json` | The catalog entry for the `ghp-lifecycle` workflow, copied from `workflows/ghp-lifecycle/workflow.yml`, with the same `requires` block (Spec Kit refuses a pinned install whose downloaded `requires` differs). |
 | `bundle/bundle.yml` and `bundle/README.md` | One bundle that installs the extension and the workflow together, each pinned to its version, and the page that explains it. |
 
-The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. They carry no checksum, because there is no release file to take one from. The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the day the pack was written: **TO CONFIRM**, set them to the release date with the changelog date.
+The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. The extension entry carries the SHA-256 of the file attached to the release (the same value as its line in `SHA256SUMS`). The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the release date, 2026-11-12, the same as the changelog.
 
 ## 1. Extension submission
 
@@ -71,7 +71,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 
 **Testing Checklist** (tick each only after doing it against the published release)
 
-- [ ] Extension installs successfully via download URL
+- [x] Extension installs successfully via download URL
 - [ ] All commands execute without errors
 - [ ] Documentation is complete and accurate
 - [ ] No security vulnerabilities identified
@@ -79,27 +79,27 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 
 **Submission Requirements**
 
-- [ ] Valid `extension.yml` manifest included
-- [ ] README.md with installation and usage instructions
-- [ ] LICENSE file included
-- [ ] GitHub release created with version tag
-- [ ] All command files exist and are properly formatted
-- [ ] Extension ID follows naming conventions (lowercase-with-hyphens)
+- [x] Valid `extension.yml` manifest included
+- [x] README.md with installation and usage instructions
+- [x] LICENSE file included
+- [x] GitHub release created with version tag
+- [x] All command files exist and are properly formatted
+- [x] Extension ID follows naming conventions (lowercase-with-hyphens)
 
-**Testing Details** (**TO CONFIRM**: fill in what was actually run, from the release evidence file)
+**Testing Details** (from what was run against the release on 2026-11-12)
 
 ```markdown
 **Tested on:**
-- TO CONFIRM: operating system and version, with Spec Kit 1.2.1 and with the newest Spec Kit
+- macOS (Darwin 27.2.0), with Spec Kit 1.2.1 (the minimum) and Spec Kit 1.4.0 (the newest release that day)
 
-**Test project:** TO CONFIRM: a clean Spec Kit project connected to a test repository and a test Project owned by a user account
+**Test project:** a new empty folder where `specify init` ran, for each Spec Kit version; the live scenarios ran against a private test repository and a test Project owned by a user account
 
 **Test scenarios:**
-1. Installed the ghp program with pipx from the v0.1.0 tag
-2. Installed the extension from the download URL; TO CONFIRM: 13 commands and 2 hooks shown by specify extension list
-3. Ran /speckit.ghp.setup and /speckit.ghp.pull on a test story
-4. Ran ghp push and ghp done without --apply and saw no write; applied after review
-5. Ran the offline test suite: TO CONFIRM: the passed and skipped counts
+1. Ran the ghp program from the v0.1.0 tag with uv (`ghp --version` printed 0.1.0); the pipx command was not run
+2. Installed the extension from the download URL on both Spec Kit versions, and again by a pinned install from the catalog and through the bundle: 13 commands and 2 hooks shown by `specify extension list` each time
+3. Ran the ghp-lifecycle workflow on a test story, from the pull to an open pull request, with every GitHub write previewed, approved at a gate, then applied (terminal mode only)
+4. Ran ghp push with a plan that had gone stale and saw it refuse to write
+5. Ran the offline test suite inside the public export: 7255 passed, 120 skipped
 ```
 
 **Example Usage**
@@ -237,11 +237,11 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 **Repository**: https://github.com/praveenlavu/spec-kit-ghp
 
 ### Checklist
-- [ ] Valid workflow.yml (passes `specify workflow info`)
-- [ ] README.md with description, inputs, and step graph
-- [ ] LICENSE file included
-- [ ] GitHub release created with raw YAML URL
-- [ ] Workflow tested end-to-end with `specify workflow run`
+- [x] Valid workflow.yml (passes `specify workflow info`)
+- [x] README.md with description, inputs, and step graph
+- [x] LICENSE file included
+- [x] GitHub release created with raw YAML URL
+- [x] Workflow tested end-to-end with `specify workflow run`
 - [ ] All gate steps have clear review messages
 - [ ] Input prompts are descriptive
 - [ ] Added to workflows/catalog.community.json (alphabetical order)
@@ -249,7 +249,7 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 The shell steps call the ghp program, which reaches GitHub through the GitHub CLI and its sign-in; the workflow README says so. Only the numeric issue number is put into a shell command, and each step checks it first.
 ```
 
-Tick "tested end-to-end" only after a real run (**TO CONFIRM**: none has been made yet).
+The end-to-end run was made once, in terminal mode only, on a private test repository, from a story to an open pull request; the gate answers were typed by an AI agent that had read each preview, so it is not a claim of independent human review. The lifecycle also installed from the raw workflow address and by a pinned catalog install on both Spec Kit versions.
 
 ## 3. Bundle submission
 
@@ -294,38 +294,38 @@ Tick "tested end-to-end" only after a real run (**TO CONFIRM**: none has been ma
 
 **Testing Checklist** (tick each only after doing it against the published release)
 
-- [ ] Validation succeeds with `specify bundle validate --path <bundle-directory>`
-- [ ] Build succeeds with `specify bundle build --path <bundle-directory>` and produces the submitted artifact
-- [ ] Bundle installs successfully from the built artifact
-- [ ] The submitted distribution path was tested end to end, including bundle-ID installation from an install-allowed catalog when a catalog entry is proposed
-- [ ] Installation was tested in a clean Spec Kit project
-- [ ] Required component catalogs are documented and were included in testing, or no extra catalogs are required
+- [x] Validation succeeds with `specify bundle validate --path <bundle-directory>`
+- [x] Build succeeds with `specify bundle build --path <bundle-directory>` and produces the submitted artifact
+- [x] Bundle installs successfully from the built artifact
+- [x] The submitted distribution path was tested end to end, including bundle-ID installation from an install-allowed catalog when a catalog entry is proposed
+- [x] Installation was tested in a clean Spec Kit project
+- [x] Required component catalogs are documented and were included in testing, or no extra catalogs are required
 - [ ] Documentation is complete and accurate
 
 **Submission Requirements**
 
-- [ ] Valid `bundle.yml` manifest included
-- [ ] README.md explains the bundle's intended role, installed components, and installation steps
-- [ ] LICENSE file included
-- [ ] GitHub release created with a version tag
-- [ ] Bundle ID matches the manifest and follows naming conventions
-- [ ] Every extension, preset, workflow, and step reference is pinned where the manifest requires a version
+- [x] Valid `bundle.yml` manifest included
+- [x] README.md explains the bundle's intended role, installed components, and installation steps
+- [x] LICENSE file included
+- [x] GitHub release created with a version tag
+- [x] Bundle ID matches the manifest and follows naming conventions
+- [x] Every extension, preset, workflow, and step reference is pinned where the manifest requires a version
 
-**Testing Details** (**TO CONFIRM**: fill in what was actually run, from the release evidence file)
+**Testing Details** (from what was run against the release on 2026-11-12)
 
 ```markdown
 **Tested on:**
-- TO CONFIRM: operating system and version, with Spec Kit 1.2.1 and with the newest Spec Kit
+- macOS (Darwin 27.2.0), with Spec Kit 1.2.1 (the minimum) and Spec Kit 1.4.0 (the newest release that day)
 
-**Test project:** TO CONFIRM: a clean Spec Kit project
+**Test project:** a new empty folder where `specify init` ran, with the two component catalogs added
 
 **Test scenarios:**
-1. Added the two component catalogs from the v0.1.0 tag
-2. Validated the bundle manifest
-3. Built the release file and compared it with the attached ghp-0.1.0.zip
-4. Installed the bundle from that file in a clean project
-5. Installed the bundle by its id from a local install-allowed bundle catalog
-6. TO CONFIRM: listed the installed extension and workflow
+1. Added the two component catalogs, served from `main`
+2. Validated the bundle manifest (it validates only with those catalogs added to the project)
+3. Built the release file from a clean clone of the tag and compared it with the attached ghp-0.1.0.zip: identical
+4. Installed the bundle from the downloaded release file in a clean project
+5. Installed the bundle by its id from a local install-allowed bundle catalog (a `file://` address)
+6. Listed the installed extension: 13 commands and 2 hooks
 ```
 
 **Example Usage**
@@ -381,9 +381,9 @@ specify workflow run ghp-lifecycle -i issue_number=42
 
 ## What happens when someone files them
 
-None of this has been done. In order:
+Step 1 is done; nothing has been filed. In order:
 
-1. The owner makes the repository public, creates the `v0.1.0` release and attaches the extension file and the bundle file to it (the steps are in `docs/release-checklist.md`). The checksum of the extension file is then added to the extension entry.
+1. The repository is public, the `v0.1.0` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
 2. The extension is filed through Spec Kit's extension submission issue form, with the values in section 1. Spec Kit's guide says not to edit the catalog file with a pull request for an extension.
 3. The workflow is filed as a pull request, with the values in section 2.
 4. The bundle is filed through Spec Kit's bundle submission issue form, with the values in section 3.
@@ -393,10 +393,10 @@ None of this has been done. In order:
 
 - **The catalog format.** The entries and the form fields follow the catalog files, publishing guides and issue forms in a copy of Spec Kit's repository kept on the author's machine. They were not compared with the live repository, which may have changed since.
 - **How each entry is filed.** The issue-form route for extensions, the pull-request route for workflows and the issue-form route for bundles come from the same copy of the guides. They have not been checked against the live repository.
-- **The release file.** No release exists, so the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address, the catalog addresses and the checksum are all untested.
-- **Installing from the release.** `specify extension add` from the release file, and `specify workflow add` from the raw workflow address, have not been tried. The extension file built by the script installed from a local address in a test, with 13 commands and 2 hooks.
-- **The bundle.** Its structure was read with the bundle reader of Spec Kit 1.2.4.dev0 and found valid. It has not been built from the tag, installed or looked up in a catalog.
-- **The bundle file and its catalogs.** The bundle form asks for a built bundle file, its address and the catalogs its parts come from. The catalogs are served from the tag, which does not exist yet.
+- **The release file.** Checked: the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address and the two catalog addresses all answer, and the file matches its checksum. Not checked: the catalogs as served to someone who has them cached for a long time.
+- **Installing from the release.** `specify extension add` from the release file and `specify workflow add` from the raw workflow address were run on Spec Kit 1.2.1 and 1.4.0. `specify extension add --from` stops at a trust question when no one is at the terminal; it was answered yes.
+- **The bundle.** Validated, built from a clean clone of the tag, installed from the release file and installed by its id from a local catalog, on both versions. Not checked: a bundle catalog served over the network (the local one used a `file://` address).
+- **The bundle file and its catalogs.** The two component catalogs are served from `main`, so a change there reaches installers without a new tag.
 - **Optional fields.** The entry has no category or effect. Some entries in the catalog have them, and the maintainers may add or ask for them.
 - **The bundle role.** The role text `developer` is a choice, copied from an example in Spec Kit's own catalog.
 - **The `ghp` program is not in the bundle.** The extension needs the `ghp` command-line tool, which is installed from this repository, not from Spec Kit. Whether the maintainers accept an entry that needs a separate install is not known.
@@ -445,4 +445,4 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 - **Fork and other-repository refusals of `ghp done`.** `ghp done` refuses a pull request named with `--pr` that comes from a fork or belongs to another repository, and a story closed by a commit of another repository; those refusals have not run against real GitHub.
 - **Board and strict checks on GitHub and Actions.** The board check, `strict verify` and `strict check` on real GitHub and in Actions.
 - **The reusable workflows in a consumer repository.** The four ready-made workflows have not yet run in another repository on GitHub's hosted runners. Still unverified there: the read-only token of a pull request from a fork, the re-run when a pull request's target branch is changed (the `edited` event), and how the optional secret reaches the job.
-- **The Spec Kit minimum version.** Spec Kit 1.2.1, the oldest supported version, has not been tried. The contract tests ran against 1.2.4.dev0 only.
+- **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The contract tests and the live lifecycle run used 1.2.4.dev0 only, so running the workflow on 1.2.1 or 1.4.0 has not been tried.

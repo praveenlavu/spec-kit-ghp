@@ -180,11 +180,11 @@ def test_draft_says_it_is_a_draft_and_nothing_is_published():
     t = _text(DRAFT)
     assert "DRAFT" in "\n".join(t.splitlines()[:3])
     flat = " ".join(t.split())
-    assert "Nothing is published" in flat and "whether to publish is the owner's decision" in flat.lower()
-    assert "no release exists" in flat.lower()
+    assert "Nothing is filed with Spec Kit" in flat and "whether to publish is the owner's decision" in flat.lower()
+    assert "the release `v0.1.0` exists" in flat.lower()
     assert "**Verified" not in t  # nothing in this draft is a verified result
     assert "not GitHub's automatic archive" in flat  # the address is a release file
-    assert "bundle reader of Spec Kit 1.2.4.dev0" in flat
+    assert "installed by its id from a local catalog" in flat
     assert "Every value is copied" not in flat  # the download address and the verified flag are not copied
 
 
@@ -254,9 +254,9 @@ def _block(section, label):
 
 
 def _boxes(section, label):
-    m = re.search(r"^\*\*%s\*\*[^\n]*\n\n((?:- \[ \] [^\n]*\n)+)" % re.escape(label), section, re.M)
+    m = re.search(r"^\*\*%s\*\*[^\n]*\n\n((?:- \[[ x]\] [^\n]*\n)+)" % re.escape(label), section, re.M)
     assert m, label
-    return re.findall(r"^- \[ \] (.*)$", m.group(1), re.M)
+    return re.findall(r"^- \[[ x]\] (.*)$", m.group(1), re.M)
 
 
 def tag_url(version, path):
@@ -310,7 +310,7 @@ def test_workflow_pull_request_values_are_the_manifests():
     body = _block(sec, "Pull request body")
     for needle in ("**Workflow Name**: %s" % y["name"], "**Workflow ID**: %s" % y["id"], "**Version**: %s" % y["version"], "**Repository**: %s" % w["repository"]):
         assert needle in body, needle
-    assert re.findall(r"^- \[ \] (.*)$", body, re.M) == WF_CHECKS
+    assert re.findall(r"^- \[[ x]\] (.*)$", body, re.M) == WF_CHECKS
     assert "workflows/catalog.community.json" in sec and "sorted by id" in sec
 
 
@@ -343,11 +343,10 @@ def test_bundle_form_values_are_the_manifests():
 
 def test_what_is_not_known_yet_is_marked_and_nothing_is_invented():
     t = _text(DRAFT)
+    assert "TO CONFIRM" not in t  # every placeholder was replaced by what was run
     for heading in ("1. Extension submission", "3. Bundle submission"):
         details = _block(_form(heading), "Testing Details")
-        assert "TO CONFIRM" in details, heading
-        assert "TO CONFIRM" in re.search(r"^\*\*Testing Details\*\*[^\n]*", _form(heading), re.M).group(0)
-    assert "TO CONFIRM" in _form("2. Workflow submission")  # the end-to-end run has not happened
+        assert "Spec Kit 1.2.1" in details and "Spec Kit 1.4.0" in details, heading
     assert catalog("extensions.json")["extensions"]["ghp"]["sha256"] == "13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837" and "\"sha256\": \"13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837\"" in t  # the line of SHA256SUMS
     assert "add `sha256` once the release file exists" not in t
 
@@ -363,3 +362,12 @@ def test_the_catalog_wording_says_main_not_the_tag():
         t = " ".join((ROOT / page).read_text(encoding="utf-8").split())
         assert "serves from its tag" not in t and "serves two install-allowed catalogs from its tag" not in t, page
         assert "`main` branch" in t, page
+
+
+def test_only_the_boxes_that_were_really_done_are_ticked():
+    """A tick is a claim about the published release; the judgements (documentation, security, gate wording, the catalog pull request) stay empty."""
+    t = _text(DRAFT)
+    empty = [l[6:] for l in t.splitlines() if l.startswith("- [ ] ")]
+    assert sorted(empty) == sorted(["All commands execute without errors", "Documentation is complete and accurate", "No security vulnerabilities identified",
+        "Tested on at least one real project", "All gate steps have clear review messages", "Input prompts are descriptive",
+        "Added to workflows/catalog.community.json (alphabetical order)", "Documentation is complete and accurate"])
