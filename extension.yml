@@ -1,0 +1,84 @@
+schema_version: "1.0"
+
+extension:
+  id: "ghp"
+  name: "Spec Kit for GitHub Projects - human-gated lifecycle"
+  version: "0.1.0"
+  description: "GitHub issue to Done through Spec Kit, with a human sign-off before every write."
+  author: "praveenlavu"
+  repository: "https://github.com/praveenlavu/spec-kit-ghp"
+  license: "MIT"
+  homepage: "https://github.com/praveenlavu/spec-kit-ghp"
+
+requires:
+  speckit_version: ">=1.2.1"
+  # Spec Kit only checks that each tool is on PATH, not its version; the ghp package carries the same version as this extension.
+  tools:
+    - name: "ghp"
+      version: ">=0.1.0"
+      required: true
+    - name: "git"
+      required: true
+    - name: "gh"
+      required: true
+
+provides:
+  commands:
+    - name: "speckit.ghp.setup"
+      file: "commands/setup.md"
+      description: "Check tools, connect to GitHub, and confirm which kit runs each lifecycle phase."
+    - name: "speckit.ghp.constitution"
+      file: "commands/constitution.md"
+      description: "Append the GitHub/HITL articles to the project constitution without replacing it."
+    - name: "speckit.ghp.pull"
+      file: "commands/pull.md"
+      description: "Turn a GitHub story issue into a spec and a DoD ledger; optionally move the story to In Progress."
+    - name: "speckit.ghp.plan"
+      file: "commands/plan.md"
+      description: "Route the plan phase and require ledger section 2 to be filled before finishing."
+    - name: "speckit.ghp.tasks"
+      file: "commands/tasks.md"
+      description: "Route the tasks phase and make sure a standard tasks.md exists for push."
+    - name: "speckit.ghp.implement"
+      file: "commands/implement.md"
+      description: "Route the implement phase with TDD and keep the ledger AC table current."
+    - name: "speckit.ghp.push"
+      file: "commands/push.md"
+      description: "Preview the sub-issues for tasks.md, then create or update them after an explicit yes."
+    - name: "speckit.ghp.gate"
+      file: "commands/gate.md"
+      description: "Run the DoD gate (traceability, assertions, AC drift, evidence) and log the result in the ledger."
+    - name: "speckit.ghp.review"
+      file: "commands/review.md"
+      description: "Review the branch diff from eight angles (correctness, security, tests and more; the last in strict mode only), verify findings, log them in the ledger."
+    - name: "speckit.ghp.pr"
+      file: "commands/pr.md"
+      description: "Build the PR body from ledger, gate and review results, then open the PR after an explicit yes."
+    - name: "speckit.ghp.status"
+      file: "commands/status.md"
+      description: "Read-only report: story state, ledger completeness, AC drift, traceability, sub-issue progress."
+    - name: "speckit.ghp.done"
+      file: "commands/done.md"
+      description: "Check the DoD checklist, then post the ledger comment, close the issue and set Done after an explicit yes."
+    - name: "speckit.ghp.stack"
+      file: "commands/stack.md"
+      description: "Detect the stack, then find a kit or research a cited draft profile for the human to approve; never installs a kit."
+
+hooks:
+  after_tasks:
+    command: "speckit.ghp.push"
+    optional: true
+    prompt: "Push tasks to the GitHub Project?"
+    description: "Preview sub-issues for the new tasks.md (nothing is written without a yes)"
+  after_implement:
+    command: "speckit.ghp.gate"
+    optional: true
+    prompt: "Run the GitHub DoD gate now?"
+    description: "Check AC traceability, assertions and AC drift after implementation (no GitHub writes; the result is logged in the ledger and committed)"
+
+tags:
+  - "github-projects"
+  - "issue-tracking"
+  - "hitl"
+  - "workflow"
+  - "governance"

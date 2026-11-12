@@ -1,0 +1,158 @@
+{
+  "created_at": "2026-10-28T22:38:49.895218+00:00",
+  "current_step_id": "pr-apply",
+  "current_step_index": 18,
+  "error": null,
+  "execution": {
+    "initial": {},
+    "offset": 0,
+    "sequence": [],
+    "version": 2
+  },
+  "inputs": {
+    "integration": "claude",
+    "issue_number": 11
+  },
+  "installed_registry_root": null,
+  "installed_workflow_id": null,
+  "run_id": "aaaa0003",
+  "status": "completed",
+  "step_results": {
+    "approve-pr": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "approve-push": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "approve-sync": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "gate": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "implement": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "plan": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "pr-apply": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "pr-prepare": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "pr-preview": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "pull": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "push-apply": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "push-preview": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "review": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "review-plan": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "review-review": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "review-spec": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "sync-apply": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "sync-preview": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "tasks": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    }
+  },
+  "updated_at": "2026-10-28T22:48:44.862093+00:00",
+  "workflow_dir": "/home/user/demo/.specify/workflows/ghp-lifecycle",
+  "workflow_id": "ghp-lifecycle"
+}

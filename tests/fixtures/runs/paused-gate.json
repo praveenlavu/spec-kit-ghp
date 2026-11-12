@@ -1,0 +1,39 @@
+{
+  "created_at": "2026-10-31T03:59:16.604459+00:00",
+  "current_step_id": "review-spec",
+  "current_step_index": 1,
+  "error": null,
+  "execution": {
+    "initial": {},
+    "offset": 0,
+    "sequence": [],
+    "version": 2
+  },
+  "inputs": {
+    "integration": "claude",
+    "issue_number": 11
+  },
+  "installed_registry_root": null,
+  "installed_workflow_id": null,
+  "run_id": "aaaa0006",
+  "status": "paused",
+  "step_results": {
+    "pull": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "completed"
+    },
+    "review-spec": {
+      "output": {
+        "exit_code": 0,
+        "stdout": "ZZ-OUTPUT-TEXT"
+      },
+      "status": "paused"
+    }
+  },
+  "updated_at": "2026-10-31T03:59:16.620745+00:00",
+  "workflow_dir": "/home/user/demo/.specify/workflows/ghp-lifecycle",
+  "workflow_id": "ghp-lifecycle"
+}

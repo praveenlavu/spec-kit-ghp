@@ -1,0 +1,50 @@
+{
+  "GET repos/octo/demo": {
+    "default_branch": "main"
+  },
+  "GET repos/octo/demo/issues/1001": {
+    "assignee": null,
+    "assignees": [],
+    "author_association": "OWNER",
+    "body": "",
+    "closed_at": null,
+    "comments": 0,
+    "created_at": "2026-01-01T00:00:00Z",
+    "html_url": "https://github.com/octo/demo/issues/1001",
+    "id": 9100001001,
+    "labels": [
+      {
+        "id": 1,
+        "name": "ghp:story"
+      }
+    ],
+    "locked": false,
+    "milestone": {
+      "number": 1,
+      "state": "open",
+      "title": "Release 1"
+    },
+    "node_id": "I_kwDOFictional1001",
+    "number": 1001,
+    "repository_url": "https://api.github.com/repos/octo/demo",
+    "state": "open",
+    "state_reason": null,
+    "sub_issues_summary": {
+      "completed": 1,
+      "percent_completed": 33,
+      "total": 3
+    },
+    "title": "Points on purchases",
+    "updated_at": "2026-01-01T00:00:00Z",
+    "url": "https://api.github.com/repos/octo/demo/issues/1001",
+    "user": {
+      "id": 1001,
+      "login": "octo-author",
+      "node_id": "MDQ6VXNlcjE=",
+      "site_admin": false,
+      "type": "User"
+    }
+  },
+  "GET repos/octo/demo/pulls?head=octo:feature/gh1001-points&base=main&state=open&per_page=100": [],
+  "GET repos/octo/demo/pulls?head=octo:feature/gh1001-points&base=release/1.0&state=open&per_page=100": []
+}

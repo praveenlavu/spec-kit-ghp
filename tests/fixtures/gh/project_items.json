@@ -1,0 +1,12 @@
+{
+  "node": {
+    "projectItems": {
+      "pageInfo": {"hasNextPage": false, "endCursor": "i3"},
+      "nodes": [
+        {"id": "PVTI_FictionalOther1", "project": {"id": "PVT_kwFictionalOther1"}},
+        {"id": "PVTI_FictionalOther2", "project": {"id": "PVT_kwFictionalOther2"}},
+        {"id": "PVTI_FictionalItem3", "project": {"id": "PVT_kwFictional0003"}}
+      ]
+    }
+  }
+}

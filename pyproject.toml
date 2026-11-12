@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spec-kit-ghp"
+dynamic = ["version"]
+description = "Spec Kit to GitHub Issues and Projects v2 bridge"
+readme = "README.md"
+authors = [{ name = "praveenlavu" }]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+
+[project.urls]
+Homepage = "https://github.com/praveenlavu/spec-kit-ghp"
+Repository = "https://github.com/praveenlavu/spec-kit-ghp"
+
+[project.scripts]
+ghp = "ghp.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "ghp.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ghp = ["seeds/*.json", "golden/*.json"]
+
+# dev config, not a dependency
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

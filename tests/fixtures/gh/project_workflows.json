@@ -1,0 +1,18 @@
+{
+  "user": {
+    "projectV2": {
+      "id": "PVT_kwFictional0003",
+      "workflows": {
+        "pageInfo": {"hasNextPage": false, "endCursor": "w6"},
+        "nodes": [
+          {"name": "Item closed", "enabled": true, "number": 1},
+          {"name": "Pull request merged", "enabled": true, "number": 2},
+          {"name": "Auto-close issue", "enabled": false, "number": 3},
+          {"name": "Auto-add sub-issues to project", "enabled": true, "number": 4},
+          {"name": "Pull request linked to issue", "enabled": true, "number": 5},
+          {"name": "Item added to project", "enabled": false, "number": 6}
+        ]
+      }
+    }
+  }
+}

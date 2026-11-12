@@ -1,0 +1,506 @@
+# GitHub's public GraphQL schema (https://docs.github.com/public/fpt/schema.docs.graphql), as saved by spike/s0_schema.py
+# on 2026-11-08. GitHub publishes this schema as public documentation; it holds no client or secret data.
+# A SUBSET, doc strings and directives stripped: only the definitions the offline schema tests read.
+# Regenerate (after `python3 -I spike/s0_schema.py`):
+#   python3 scripts/extract_schema_subset.py spike/out/schema.docs.graphql \
+#     Query:node,repository,user,viewer \
+#     Mutation:addProjectV2ItemById,updateProjectV2ItemFieldValue \
+#     User:databaseId,login,projectV2 \
+#     Bot:databaseId \
+#     Organization:databaseId \
+#     Mannequin:databaseId \
+#     Actor \
+#     Repository:issue,issueOrPullRequest,nameWithOwner \
+#     Issue:comments,projectItems,timelineItems,subIssuesSummary,closedByPullRequestsReferences \
+#     IssueCommentConnection \
+#     IssueComment:id,databaseId,body,createdAt,lastEditedAt,isMinimized,viewerDidAuthor,author,userContentEdits \
+#     UserContentEditConnection:totalCount \
+#     PageInfo \
+#     ProjectV2:id,fields,workflows \
+#     ProjectV2SingleSelectField:id,name,options \
+#     ProjectV2SingleSelectFieldOption \
+#     ProjectV2Workflow:name,enabled,number \
+#     ProjectV2Item:id,project,isArchived,fieldValueByName \
+#     ProjectV2ItemFieldSingleSelectValue:name,optionId \
+#     ProjectV2ItemStatusChangedEvent \
+#     ProjectV2FieldConfiguration \
+#     IssueTimelineItems \
+#     IssueTimelineItemsItemType \
+#     AddProjectV2ItemByIdInput \
+#     AddProjectV2ItemByIdPayload \
+#     UpdateProjectV2ItemFieldValueInput \
+#     UpdateProjectV2ItemFieldValuePayload \
+#     ProjectV2FieldValue \
+#     ClosedEvent:closer,stateReason \
+#     Closer \
+#     SubIssuesSummary:total,completed \
+#     PullRequest:number,merged,mergedAt,baseRefName,mergeCommit,baseRepository,id,isCrossRepository,title,body,author \
+#     Commit:oid,repository \
+#     PullRequestConnection:nodes,pageInfo \
+#     IssueTimelineItemsConnection:nodes,pageInfo \
+#     IssueOrPullRequest \
+#     CrossReferencedEvent:source,willCloseTarget \
+#     ReferencedSubject \
+#     > tests/fixtures/gh/schema.subset.graphql
+
+type Query implements Node {
+  node(
+    id: ID!
+  ): Node
+  repository(
+    followRenames: Boolean = true
+    name: String!
+    owner: String!
+  ): Repository
+  user(
+    login: String!
+  ): User
+  viewer: User!
+}
+
+type Mutation {
+  addProjectV2ItemById(
+    input: AddProjectV2ItemByIdInput!
+  ): AddProjectV2ItemByIdPayload
+  updateProjectV2ItemFieldValue(
+    input: UpdateProjectV2ItemFieldValueInput!
+  ): UpdateProjectV2ItemFieldValuePayload
+}
+
+type User implements Actor &
+  Agentic &
+  Node &
+  PackageOwner &
+  ProfileOwner &
+  ProjectOwner &
+  ProjectV2Owner &
+  ProjectV2Recent &
+  RepositoryDiscussionAuthor &
+  RepositoryDiscussionCommentAuthor &
+  RepositoryOwner &
+  Sponsorable &
+  UniformResourceLocatable {
+  databaseId: Int
+  login: String!
+  projectV2(
+    number: Int!
+  ): ProjectV2
+}
+
+type Bot implements Actor & Node & UniformResourceLocatable {
+  databaseId: Int
+}
+
+type Organization implements Actor &
+  MemberStatusable &
+  Node &
+  PackageOwner &
+  ProfileOwner &
+  ProjectOwner &
+  ProjectV2Owner &
+  ProjectV2Recent &
+  RepositoryDiscussionAuthor &
+  RepositoryDiscussionCommentAuthor &
+  RepositoryOwner &
+  Sponsorable &
+  UniformResourceLocatable {
+  databaseId: Int
+}
+
+type Mannequin implements Actor & Node & UniformResourceLocatable {
+  databaseId: Int
+}
+
+interface Actor {
+  avatarUrl(
+    size: Int
+  ): URI!
+  login: String!
+  resourcePath: URI!
+  url: URI!
+}
+
+type Repository implements Node &
+  PackageOwner &
+  ProjectOwner &
+  ProjectV2Recent &
+  RepositoryInfo &
+  Starrable &
+  Subscribable &
+  UniformResourceLocatable {
+  issue(
+    number: Int!
+  ): Issue
+  issueOrPullRequest(
+    number: Int!
+  ): IssueOrPullRequest
+  nameWithOwner: String!
+}
+
+type Issue implements Assignable &
+  Closable &
+  Comment &
+  Deletable &
+  Labelable &
+  Lockable &
+  Node &
+  ProjectV2Owner &
+  Reactable &
+  RepositoryNode &
+  Subscribable &
+  SubscribableThread &
+  UniformResourceLocatable &
+  Updatable &
+  UpdatableComment {
+  closedByPullRequestsReferences(
+    after: String
+    before: String
+    excludeUserLinked: Boolean = false
+    first: Int
+    includeClosedPrs: Boolean = false
+    last: Int
+    orderByState: Boolean = false
+    userLinkedOnly: Boolean = false
+  ): PullRequestConnection
+  comments(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    orderBy: IssueCommentOrder
+  ): IssueCommentConnection!
+  projectItems(
+    after: String
+    before: String
+    first: Int
+    includeArchived: Boolean = true
+    last: Int
+  ): ProjectV2ItemConnection
+  subIssuesSummary: SubIssuesSummary!
+  timelineItems(
+    after: String
+    before: String
+    first: Int
+    itemTypes: [IssueTimelineItemsItemType!]
+    last: Int
+    since: DateTime
+    skip: Int
+  ): IssueTimelineItemsConnection!
+}
+
+type IssueCommentConnection {
+  edges: [IssueCommentEdge]
+  nodes: [IssueComment]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type IssueComment implements Comment &
+  Deletable &
+  Minimizable &
+  Node &
+  Pinnable &
+  Reactable &
+  RepositoryNode &
+  Updatable &
+  UpdatableComment {
+  author: Actor
+  body: String!
+  createdAt: DateTime!
+  databaseId: Int
+  id: ID!
+  isMinimized: Boolean!
+  lastEditedAt: DateTime
+  userContentEdits(
+    after: String
+    before: String
+    first: Int
+    last: Int
+  ): UserContentEditConnection
+  viewerDidAuthor: Boolean!
+}
+
+type UserContentEditConnection {
+  totalCount: Int!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+type ProjectV2 implements Closable & Node & Updatable {
+  fields(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    orderBy: ProjectV2FieldOrder = {field: POSITION, direction: ASC}
+  ): ProjectV2FieldConfigurationConnection!
+  id: ID!
+  workflows(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    orderBy: ProjectV2WorkflowOrder = {field: NAME, direction: ASC}
+  ): ProjectV2WorkflowConnection!
+}
+
+type ProjectV2SingleSelectField implements Node & ProjectV2FieldCommon {
+  id: ID!
+  name: String!
+  options(
+    names: [String!]
+  ): [ProjectV2SingleSelectFieldOption!]!
+}
+
+type ProjectV2SingleSelectFieldOption {
+  color: ProjectV2SingleSelectFieldOptionColor!
+  description: String!
+  descriptionHTML: String!
+  id: String!
+  name: String!
+  nameHTML: String!
+}
+
+type ProjectV2Workflow implements Node {
+  enabled: Boolean!
+  name: String!
+  number: Int!
+}
+
+type ProjectV2Item implements Node {
+  fieldValueByName(
+    name: String!
+  ): ProjectV2ItemFieldValue
+  id: ID!
+  isArchived: Boolean!
+  project: ProjectV2!
+}
+
+type ProjectV2ItemFieldSingleSelectValue implements Node & ProjectV2ItemFieldValueCommon
+ {
+  name: String
+  optionId: String
+}
+
+type ProjectV2ItemStatusChangedEvent implements Node & ProjectV2Event {
+  actor: Actor
+  createdAt: DateTime!
+  id: ID!
+  previousStatus: String!
+  project: ProjectV2
+  status: String!
+  wasAutomated: Boolean!
+}
+
+union ProjectV2FieldConfiguration =
+  | ProjectV2Field
+  | ProjectV2IterationField
+  | ProjectV2MultiSelectField
+  | ProjectV2SingleSelectField
+
+union IssueTimelineItems =
+  | AddedToProjectEvent
+  | AddedToProjectV2Event
+  | AssignedEvent
+  | BlockedByAddedEvent
+  | BlockedByRemovedEvent
+  | BlockingAddedEvent
+  | BlockingRemovedEvent
+  | ClosedEvent
+  | CommentDeletedEvent
+  | ConnectedEvent
+  | ConvertedFromDraftEvent
+  | ConvertedNoteToIssueEvent
+  | ConvertedToDiscussionEvent
+  | CrossReferencedEvent
+  | DemilestonedEvent
+  | DisconnectedEvent
+  | IssueComment
+  | IssueCommentPinnedEvent
+  | IssueCommentUnpinnedEvent
+  | IssueFieldAddedEvent
+  | IssueFieldChangedEvent
+  | IssueFieldRemovedEvent
+  | IssueTypeAddedEvent
+  | IssueTypeChangedEvent
+  | IssueTypeRemovedEvent
+  | LabeledEvent
+  | LockedEvent
+  | MarkedAsDuplicateEvent
+  | MentionedEvent
+  | MilestonedEvent
+  | MovedColumnsInProjectEvent
+  | ParentIssueAddedEvent
+  | ParentIssueRemovedEvent
+  | PinnedEvent
+  | ProjectV2ItemStatusChangedEvent
+  | ReferencedEvent
+  | RemovedFromProjectEvent
+  | RemovedFromProjectV2Event
+  | RenamedTitleEvent
+  | ReopenedEvent
+  | SubIssueAddedEvent
+  | SubIssueRemovedEvent
+  | SubscribedEvent
+  | TransferredEvent
+  | UnassignedEvent
+  | UnlabeledEvent
+  | UnlockedEvent
+  | UnmarkedAsDuplicateEvent
+  | UnpinnedEvent
+  | UnsubscribedEvent
+  | UserBlockedEvent
+
+enum IssueTimelineItemsItemType {
+  ADDED_TO_PROJECT_EVENT
+  ADDED_TO_PROJECT_V2_EVENT
+  ASSIGNED_EVENT
+  BLOCKED_BY_ADDED_EVENT
+  BLOCKED_BY_REMOVED_EVENT
+  BLOCKING_ADDED_EVENT
+  BLOCKING_REMOVED_EVENT
+  CLOSED_EVENT
+  COMMENT_DELETED_EVENT
+  CONNECTED_EVENT
+  CONVERTED_FROM_DRAFT_EVENT
+  CONVERTED_NOTE_TO_ISSUE_EVENT
+  CONVERTED_TO_DISCUSSION_EVENT
+  CROSS_REFERENCED_EVENT
+  DEMILESTONED_EVENT
+  DISCONNECTED_EVENT
+  ISSUE_COMMENT
+  ISSUE_COMMENT_PINNED_EVENT
+  ISSUE_COMMENT_UNPINNED_EVENT
+  ISSUE_FIELD_ADDED_EVENT
+  ISSUE_FIELD_CHANGED_EVENT
+  ISSUE_FIELD_REMOVED_EVENT
+  ISSUE_TYPE_ADDED_EVENT
+  ISSUE_TYPE_CHANGED_EVENT
+  ISSUE_TYPE_REMOVED_EVENT
+  LABELED_EVENT
+  LOCKED_EVENT
+  MARKED_AS_DUPLICATE_EVENT
+  MENTIONED_EVENT
+  MILESTONED_EVENT
+  MOVED_COLUMNS_IN_PROJECT_EVENT
+  PARENT_ISSUE_ADDED_EVENT
+  PARENT_ISSUE_REMOVED_EVENT
+  PINNED_EVENT
+  PROJECT_V2_ITEM_STATUS_CHANGED_EVENT
+  REFERENCED_EVENT
+  REMOVED_FROM_PROJECT_EVENT
+  REMOVED_FROM_PROJECT_V2_EVENT
+  RENAMED_TITLE_EVENT
+  REOPENED_EVENT
+  SUBSCRIBED_EVENT
+  SUB_ISSUE_ADDED_EVENT
+  SUB_ISSUE_REMOVED_EVENT
+  TRANSFERRED_EVENT
+  UNASSIGNED_EVENT
+  UNLABELED_EVENT
+  UNLOCKED_EVENT
+  UNMARKED_AS_DUPLICATE_EVENT
+  UNPINNED_EVENT
+  UNSUBSCRIBED_EVENT
+  USER_BLOCKED_EVENT
+}
+
+input AddProjectV2ItemByIdInput {
+  clientMutationId: String
+  contentId: ID!
+  projectId: ID!
+}
+
+type AddProjectV2ItemByIdPayload {
+  clientMutationId: String
+  item: ProjectV2Item
+}
+
+input UpdateProjectV2ItemFieldValueInput {
+  clientMutationId: String
+  fieldId: ID!
+  itemId: ID!
+  projectId: ID!
+  value: ProjectV2FieldValue!
+}
+
+type UpdateProjectV2ItemFieldValuePayload {
+  clientMutationId: String
+  projectV2Item: ProjectV2Item
+}
+
+input ProjectV2FieldValue {
+  date: Date
+  iterationId: String
+  multiSelectOptionIds: [String!]
+  number: Float
+  singleSelectOptionId: String
+  text: String
+}
+
+type ClosedEvent implements Node & UniformResourceLocatable {
+  closer: Closer
+  stateReason: IssueStateReason
+}
+
+union Closer = Commit | ProjectV2 | PullRequest
+
+type SubIssuesSummary {
+  completed: Int!
+  total: Int!
+}
+
+type PullRequest implements Assignable &
+  Closable &
+  Comment &
+  Labelable &
+  Lockable &
+  Node &
+  ProjectV2Owner &
+  Reactable &
+  RepositoryNode &
+  Subscribable &
+  UniformResourceLocatable &
+  Updatable &
+  UpdatableComment {
+  author: Actor
+  baseRefName: String!
+  baseRepository: Repository
+  body: String!
+  id: ID!
+  isCrossRepository: Boolean!
+  mergeCommit: Commit
+  merged: Boolean!
+  mergedAt: DateTime
+  number: Int!
+  title: String!
+}
+
+type Commit implements GitObject & Node & Subscribable & UniformResourceLocatable {
+  oid: GitObjectID!
+  repository: Repository!
+}
+
+type PullRequestConnection {
+  nodes: [PullRequest]
+  pageInfo: PageInfo!
+}
+
+type IssueTimelineItemsConnection {
+  nodes: [IssueTimelineItems]
+  pageInfo: PageInfo!
+}
+
+union IssueOrPullRequest = Issue | PullRequest
+
+type CrossReferencedEvent implements Node & UniformResourceLocatable {
+  source: ReferencedSubject!
+  willCloseTarget: Boolean!
+}
+
+union ReferencedSubject = Issue | PullRequest

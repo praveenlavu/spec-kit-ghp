@@ -1,0 +1,23 @@
+{
+  "owner": "example-org",
+  "repo": "example-repo",
+  "project_owner": "example-org",
+  "project_owner_type": "user",
+  "project_number": 1,
+  "status_todo": "Todo",
+  "status_active": "In Progress",
+  "status_done": "Done",
+  "dod_path": "dod",
+  "gate": {"tests": {}, "block": []},
+  "attachments_allow": [".md", ".svg", ".txt"],
+  "review_block_on": [],
+  "done_state": "Done",
+  "removed_state": "Removed",
+  "repository": "",
+  "branch_prefix": "feature/",
+  "mode": "advisory",
+  "approvers": [],
+  "approval": "terminal",
+  "unattended": {"approval_requests": false},
+  "stack": {"kit": "", "phases": {}}
+}

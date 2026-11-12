@@ -1,0 +1,280 @@
+name: ghp link on merge (reusable)
+# How a consumer repository calls it (tests/fixtures/consumer-example.yml is the full example):
+#   on:
+#     pull_request:            # not the privileged pull request event
+#       types: [closed]
+#   permissions:
+#     contents: read
+#     issues: write
+#   jobs:
+#     link:
+#       uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-link-on-merge.yml@<40-hex commit>
+#       with:
+#         ghp_ref: <the same 40-hex commit>
+#         close-story: false   # true: also run `ghp done --apply` (ledger comment, close, Project Status Done); needs the secret below
+#       secrets:
+#         GHP_PROJECT_TOKEN: ${{ secrets.GHP_PROJECT_TOKEN }}   # optional: a classic PAT with repo and project, created by the owner
+# Pin both to one full commit SHA (`ghp_ref` is required, there is no default): a tag can be moved, and `ghp_ref` decides which ghp is installed (pip,
+# from git, at that ref). Installing ghp from git needs the toolkit repository to be readable by the runner (public: there is no token input for the install).
+# Known limit: pip's build isolation fetches setuptools (>=61) from PyPI unpinned and without a hash check (SECURITY note, T41).
+#
+# What it does, only for a merged pull request (`merged == true`): reads the issues its title and body close (`close|fix|resolve` and their -s/-d
+# forms, an optional colon, then `#<n>`; code, quoted lines and HTML comments are not read; at most 20) and, with the Actions token
+# (issues: write), comments `Merged in #<pr>` on each once (a hidden marker; a re-run finds it) and closes an issue that is still open, as completed.
+# An issue that is already closed (by GitHub's own `Closes`, by hand, as not planned) is left as it is: never closed again, never reopened.
+# A pull request merged into a branch other than the default one closes nothing here: GitHub ignores the keyword there, and the job says to close
+# with `ghp done <n> --pr <pr>` (what close-story does). The Project board is moved only by `ghp done`, only with close-story: true and the
+# GHP_PROJECT_TOKEN secret (the Actions token cannot see a user Project); without them the comment says the board was not moved.
+# A `Fixes #<n>` that names a pull request is skipped (nothing written). A pull request from a fork gets a read-only token and no secret: the job
+# prints a notice and writes nothing (GitHub's own keyword closing still runs on the default branch).
+# Any failed read or write, and any non-zero `ghp done`, fails the job after every issue was handled; when `ghp done` refuses (unticked DoD boxes,
+# no approval in comment mode, closed as not planned) the issue it was left to stays open.
+# Limits: the merge is the human gate here (no preview step); GitHub's own closing runs first and its board automation may already have moved the
+# item; the closing-keyword reading is stricter than GitHub's (cross-repository references and URLs are not read), so an issue GitHub did not close
+# may be closed here only when its own keyword form is the plain one above. `ghp done` reads who may approve from the default branch after the merge,
+# and in comment mode it refuses without an approver's approval comment. The marker comment is found by the github-actions[bot] user id 41898282.
+on:
+  workflow_call:
+    inputs:
+      ghp_ref:
+        description: "The ghp to install: the full 40-character commit SHA of praveenlavu/spec-kit-ghp that the uses: line pins (a vX.Y.Z tag is accepted, not recommended)"
+        type: string
+        required: true
+      close-story:
+        description: "Also run ghp done --apply for each issue (ledger comment, close, Project Status Done). Needs GHP_PROJECT_TOKEN. Default false."
+        type: boolean
+        default: false
+    secrets:
+      GHP_PROJECT_TOKEN:
+        description: "Optional classic PAT with repo and project scopes: the only token that can move a user Project's item"
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  link:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-ghp-link-on-merge-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    env:
+      HAS_PROJECT_TOKEN: ${{ secrets.GHP_PROJECT_TOKEN != '' }}
+    steps:
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+      - name: Extract the issue numbers
+        id: ids
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ "$EVENT_NAME" != pull_request ]; then
+            echo "::error::ghp: call this workflow from the pull_request event only"
+            exit 1
+          fi
+          # A fork PR gets a read-only token and no secret: nothing could be written, so nothing is tried (a deleted fork has no name: same).
+          if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+            echo "::notice::ghp: a pull request from a fork: the token is read-only and no secret is passed, so this job writes nothing. GitHub's own closing keywords still close issues on the default branch; close the rest with ghp done <n> --pr <pr>."
+            echo "ids=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The text is read from the environment by Python, never pasted into a script. Linear: splits and str.find, one regex with no nested repeat.
+          ids=$(python3 -I -c '
+          import os, re, sys
+          text = os.environ.get("PR_TITLE", "") + "\n" + os.environ.get("PR_BODY", "")
+          text = "\n".join(text.split("```")[::2])  # fenced code; an unclosed fence hides the rest
+          parts, i = [], 0
+          while True:  # HTML comments; an unclosed one hides the rest
+              j = text.find("<!--", i)
+              if j < 0:
+                  parts.append(text[i:])
+                  break
+              parts.append(text[i:j])
+              k = text.find("-->", j + 4)
+              if k < 0:
+                  break
+              i = k + 3
+          text = " ".join(parts)
+          text = "\n".join(line for line in text.split("\n") if not line.lstrip().startswith(">"))  # quoted lines
+          text = " ".join(text.split("`")[::2])  # inline code
+          pat = re.compile(r"(?<![A-Za-z0-9_])(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?[ \t]+#([1-9][0-9]{0,8})(?![0-9A-Za-z_])", re.I)
+          ids = sorted({int(m.group(1)) for m in pat.finditer(text)})
+          if len(ids) > 20:
+              sys.exit("more than 20 issues")
+          print(" ".join(map(str, ids)))
+          ') || { echo "::error::ghp: the pull request names more than 20 issues, or its text could not be read: nothing is done"; exit 1; }
+          if ! [[ "$ids" =~ ^([1-9][0-9]{0,8}( [1-9][0-9]{0,8})*)?$ ]]; then
+            echo "::error::ghp: unexpected issue numbers"
+            exit 1
+          fi
+          if [ -z "$ids" ]; then echo "No closing keyword with an issue of this repository: nothing to do."; fi
+          echo "ids=${ids}" >> "$GITHUB_OUTPUT"
+      - name: Comment on and close the issues
+        id: comment
+        if: steps.ids.outputs.ids != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IDS: ${{ steps.ids.outputs.ids }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          CLOSE_STORY: ${{ inputs.close-story }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if ! [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::ghp: the pull request number is not a number"
+            exit 1
+          fi
+          if [ "$HAS_PROJECT_TOKEN" != true ]; then
+            board="The Project board was not moved by this workflow: the GHP_PROJECT_TOKEN secret is not set."
+          elif [ "$CLOSE_STORY" != true ]; then
+            board="The Project board was not moved by this workflow: close-story is off."
+          else
+            board="ghp done will try to close the story next (ledger comment, close, Project Status Done); if it refuses, the issue stays open and this workflow's run fails."
+          fi
+          marker="<!-- spec-kit-ghp:merged:${PR_NUM} -->"
+          failed=0
+          issues=""
+          for id in $IDS; do
+            if ! [[ "$id" =~ ^[1-9][0-9]{0,8}$ ]]; then
+              echo "::error::ghp: not an issue number"
+              failed=1
+              continue
+            fi
+            if ! info=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${id}" --jq '(if .pull_request then "pr" else "issue" end) + " " + .state'); then
+              echo "::error::ghp: #${id} could not be read (not an issue of this repository, or no access)"
+              failed=1
+              continue
+            fi
+            case "$info" in
+              "issue open") state=OPEN ;;
+              "issue closed") state=CLOSED ;;
+              "pr "*) echo "#${id} is a pull request, not an issue: nothing written."; continue ;;
+              *) echo "::error::ghp: unexpected reply for #${id}"; failed=1; continue ;;
+            esac
+            issues="${issues:+$issues }${id}"
+            if ! seen=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${id}/comments" --paginate --jq ".[] | select(.user.id == 41898282 and (.body | startswith(\"${marker}\"))) | .id"); then
+              echo "::error::ghp: the comments of #${id} could not be read"
+              failed=1
+              continue
+            fi
+            if [ -z "$seen" ]; then
+              printf '%s\nMerged in #%s.\n\n%s\n' "$marker" "$PR_NUM" "$board" > "$RUNNER_TEMP/comment.md"
+              if ! gh issue comment "$id" --repo "$GITHUB_REPOSITORY" --body-file "$RUNNER_TEMP/comment.md" > /dev/null; then
+                echo "::error::ghp: could not comment on #${id}"
+                failed=1
+                continue
+              fi
+            fi
+            if [ "$state" != OPEN ]; then
+              echo "#${id}: already closed, left as it is (never closed again, never reopened)."
+            elif [ "$BASE_REF" != "$DEFAULT_BRANCH" ]; then
+              echo "::notice::#${id} stays open: GitHub ignores closing keywords into a branch other than the default one. Close it with ghp done ${id} --pr ${PR_NUM} (close-story: true does that here)."
+            elif [ "$HAS_PROJECT_TOKEN" = true ] && [ "$CLOSE_STORY" = true ]; then
+              echo "#${id}: left to ghp done in the next step."
+            elif gh issue close "$id" --repo "$GITHUB_REPOSITORY" --reason completed > /dev/null; then
+              echo "#${id}: closed as completed."
+            else
+              echo "::error::ghp: could not close #${id}"
+              failed=1
+            fi
+          done
+          echo "issues=${issues}" >> "$GITHUB_OUTPUT"
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::ghp: at least one issue was not handled, see above"
+            exit 1
+          fi
+      - name: Install ghp
+        if: inputs.close-story && env.HAS_PROJECT_TOKEN == 'true' && steps.ids.outputs.ids != ''
+        # Before the checkout, from $RUNNER_TEMP and with -I: no file of the pull request can stand in for pip or ghp.
+        env:
+          GHP_REF: ${{ inputs.ghp_ref }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if ! [[ "$GHP_REF" =~ ^([0-9a-f]{40}|v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::ghp: ghp_ref must be a full 40-character commit SHA or a vX.Y.Z tag"
+            exit 1
+          fi
+          cd "$RUNNER_TEMP"
+          python -I -m pip install --quiet --disable-pip-version-check "spec-kit-ghp @ git+https://github.com/praveenlavu/spec-kit-ghp.git@${GHP_REF}"
+          ghp --version
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: inputs.close-story && env.HAS_PROJECT_TOKEN == 'true' && steps.ids.outputs.ids != ''
+        with:
+          # The merged commit: the base branch's code by now (the job runs only after the merge). Full history for the trust reads.
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve the target branch
+        if: inputs.close-story && env.HAS_PROJECT_TOKEN == 'true' && steps.ids.outputs.ids != ''
+        # ghp reads who may approve from origin/HEAD, which actions/checkout does not create (E_TRUST_BASE_UNRESOLVED otherwise).
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$EVENT_NAME" != pull_request ]; then
+            echo "::error::ghp: call this workflow from the pull_request event only"
+            exit 1
+          fi
+          for b in "$BASE_REF" "$DEFAULT_BRANCH"; do
+            if ! [[ "$b" =~ ^[A-Za-z0-9._][A-Za-z0-9._/-]*$ ]] || [[ "$b" == *..* ]]; then
+              echo "::error::ghp: a branch name holds characters this workflow does not accept"
+              exit 1
+            fi
+            if ! git rev-parse --verify --quiet "refs/remotes/origin/${b}^{commit}" > /dev/null; then
+              echo "::error::ghp: origin/${b} does not resolve (the checkout needs fetch-depth: 0), so the target branch's config cannot be read"
+              exit 1
+            fi
+          done
+          git remote set-head origin "$DEFAULT_BRANCH"
+      - name: Close the stories with ghp done
+        if: inputs.close-story && env.HAS_PROJECT_TOKEN == 'true' && steps.ids.outputs.ids != ''
+        env:
+          GH_TOKEN: ${{ secrets.GHP_PROJECT_TOKEN }}
+          IDS: ${{ steps.comment.outputs.issues }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::ghp: the GHP_PROJECT_TOKEN secret is empty: nothing was done"
+            exit 1
+          fi
+          if ! [[ "$PR_NUM" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::ghp: the pull request number is not a number"
+            exit 1
+          fi
+          # GitHub ignores Closes into a non-default base and links no PR: ghp done --pr reads this merged PR instead.
+          pr=()
+          if [ "$BASE_REF" != "$DEFAULT_BRANCH" ]; then pr=(--pr "$PR_NUM"); fi
+          failed=0
+          for id in $IDS; do
+            if ! [[ "$id" =~ ^[1-9][0-9]{0,8}$ ]]; then
+              echo "::error::ghp: not an issue number"
+              failed=1
+              continue
+            fi
+            code=0
+            ghp "done" "$id" ${pr[@]+"${pr[@]}"} --apply > "$RUNNER_TEMP/done.out" 2> "$RUNNER_TEMP/done.err" || code=$?
+            tr '\r' ' ' < "$RUNNER_TEMP/done.err" | sed 's/^/ghp: /'
+            if [ "$code" -eq 0 ]; then
+              echo "#${id}: ghp done applied."
+            else
+              echo "::error::ghp done ${id} exit ${code} (2: refused with nothing written, e.g. unticked DoD boxes or no approval; 1: a GitHub call failed; 3: invalid config or ledger)"
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then exit 1; fi

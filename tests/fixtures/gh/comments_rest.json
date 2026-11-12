@@ -1,0 +1,102 @@
+[
+  {
+    "url": "https://api.github.com/repos/octo/demo/issues/comments/6000000001",
+    "html_url": "https://github.com/octo/demo/issues/1#issuecomment-6000000001",
+    "issue_url": "https://api.github.com/repos/octo/demo/issues/1",
+    "id": 6000000001,
+    "node_id": "IC_kwDOFictional0001",
+    "user": {
+      "login": "octo-author",
+      "id": 1001,
+      "node_id": "MDQ6VXNlcjE=",
+      "type": "User",
+      "site_admin": false
+    },
+    "created_at": "2026-01-01T10:00:00Z",
+    "updated_at": "2026-01-01T10:00:00Z",
+    "author_association": "OWNER",
+    "body": "x",
+    "reactions": {
+      "total_count": 0
+    },
+    "performed_via_github_app": null,
+    "pin": null,
+    "minimized": null
+  },
+  {
+    "url": "https://api.github.com/repos/octo/demo/issues/comments/6000000002",
+    "html_url": "https://github.com/octo/demo/issues/1#issuecomment-6000000002",
+    "issue_url": "https://api.github.com/repos/octo/demo/issues/1",
+    "id": 6000000002,
+    "node_id": "IC_kwDOFictional0002",
+    "user": {
+      "login": "octo-author",
+      "id": 1001,
+      "node_id": "MDQ6VXNlcjE=",
+      "type": "User",
+      "site_admin": false
+    },
+    "created_at": "2026-01-01T10:05:00Z",
+    "updated_at": "2026-01-01T10:05:00Z",
+    "author_association": "OWNER",
+    "body": "x",
+    "reactions": {
+      "total_count": 0
+    },
+    "performed_via_github_app": null,
+    "pin": null,
+    "minimized": null
+  },
+  {
+    "url": "https://api.github.com/repos/octo/demo/issues/comments/6000000003",
+    "html_url": "https://github.com/octo/demo/issues/1#issuecomment-6000000003",
+    "issue_url": "https://api.github.com/repos/octo/demo/issues/1",
+    "id": 6000000003,
+    "node_id": "IC_kwDOFictional0003",
+    "user": {
+      "login": "octo-reviewer",
+      "id": 1002,
+      "node_id": "MDQ6VXNlcjE=",
+      "type": "User",
+      "site_admin": false
+    },
+    "created_at": "2026-01-01T10:10:00Z",
+    "updated_at": "2026-01-01T10:10:00Z",
+    "author_association": "OWNER",
+    "body": "x",
+    "reactions": {
+      "total_count": 0
+    },
+    "performed_via_github_app": null,
+    "pin": null,
+    "minimized": null
+  },
+  {
+    "url": "https://api.github.com/repos/octo/demo/issues/comments/6000000004",
+    "html_url": "https://github.com/octo/demo/issues/1#issuecomment-6000000004",
+    "issue_url": "https://api.github.com/repos/octo/demo/issues/1",
+    "id": 6000000004,
+    "node_id": "IC_kwDOFictional0004",
+    "user": {
+      "login": "ghp-fixture-app[bot]",
+      "id": 7000001,
+      "node_id": "MDQ6VXNlcjE=",
+      "type": "Bot",
+      "site_admin": false
+    },
+    "created_at": "2026-01-01T10:15:00Z",
+    "updated_at": "2026-01-01T10:15:00Z",
+    "author_association": "OWNER",
+    "body": "x",
+    "reactions": {
+      "total_count": 0
+    },
+    "performed_via_github_app": {
+      "id": 99001,
+      "slug": "ghp-fixture-app",
+      "name": "Ghp Fixture App"
+    },
+    "pin": null,
+    "minimized": null
+  }
+]

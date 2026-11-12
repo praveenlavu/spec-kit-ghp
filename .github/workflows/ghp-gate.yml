@@ -1,0 +1,193 @@
+name: ghp gate (reusable)
+# How a consumer repository calls it (tests/fixtures/consumer-example.yml is the full example):
+#   on:
+#     pull_request:            # not the privileged pull request event
+#       types: [opened, synchronize, reopened, edited]   # edited: a base switch after opening re-runs the checks
+#   permissions:
+#     contents: read
+#     issues: read
+#   jobs:
+#     gate:
+#       uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-gate.yml@<40-hex commit>
+#       with:
+#         ghp_ref: <the same 40-hex commit>
+# Pin both to one full commit SHA (`ghp_ref` is required, there is no default): a tag can be moved, and `ghp_ref` decides which ghp is installed (pip,
+# from git, at that ref). Installing ghp from git needs the toolkit repository to be readable by the runner (public: there is no token input for the install).
+# Known limit: pip's build isolation fetches setuptools (>=61) from PyPI unpinned and without a hash check (SECURITY note, T41).
+#
+# What it does: reads the issue from the branch name (`ghp branch --id-from`), then `ghp gate` and, when the TARGET branch's ghp.config.json says
+# mode: strict (`ghp strict mode --base`), `ghp strict check --phase pr`. Any non-zero exit of ghp fails the job (1, 2 and 3 alike); a branch that names
+# no issue is skipped under an advisory target and fails under a strict one. The gate's summary goes to the job summary (no PR comment: no write
+# permission). No secret: the read-only Actions token is given to the steps that read GitHub, and only to them.
+# Call it on `edited` too: changing a pull request's base after opening fires only `edited`; without it the checks that ran against the old base (an
+# advisory branch, say) stay green when the base becomes a strict one. To require strict everywhere, put mode: strict on every branch a PR may target.
+# Limits: the strict check here (`--phase pr`) never reads the Project board (the board check is `--phase implement` only, run locally by a person),
+# so the Actions token's blindness to user Projects does not matter (pinned by test_ci_strict_runs_never_read_the_board). A tag or commit pin of a
+# git URL is not hash-checked by pip. The target and default branch names must match [A-Za-z0-9._/-] and the PR's branch name [A-Za-z0-9._/#-]
+# (no `..`), or the job fails.
+on:
+  workflow_call:
+    inputs:
+      ghp_ref:
+        description: "The ghp to install: the full 40-character commit SHA of praveenlavu/spec-kit-ghp that the uses: line pins (a vX.Y.Z tag is accepted, not recommended)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  issues: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-ghp-gate-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+      - name: Install ghp
+        # Before the checkout, from $RUNNER_TEMP and with -I: no file of the pull request can stand in for pip or ghp.
+        env:
+          GHP_REF: ${{ inputs.ghp_ref }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if ! [[ "$GHP_REF" =~ ^([0-9a-f]{40}|v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::ghp: ghp_ref must be a full 40-character commit SHA or a vX.Y.Z tag"
+            exit 1
+          fi
+          cd "$RUNNER_TEMP"
+          python -I -m pip install --quiet --disable-pip-version-check "spec-kit-ghp @ git+https://github.com/praveenlavu/spec-kit-ghp.git@${GHP_REF}"
+          ghp --version
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # Full history: every branch is fetched, so origin/<target> and origin/<default> exist for the trust reads.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve the target branch
+        # ghp reads who may approve from origin/HEAD, which actions/checkout does not create (E_TRUST_BASE_UNRESOLVED otherwise).
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$EVENT_NAME" != pull_request ]; then
+            echo "::error::ghp: call this workflow from the pull_request event only"
+            exit 1
+          fi
+          for b in "$BASE_REF" "$DEFAULT_BRANCH"; do
+            if ! [[ "$b" =~ ^[A-Za-z0-9._][A-Za-z0-9._/-]*$ ]] || [[ "$b" == *..* ]]; then
+              echo "::error::ghp: a branch name holds characters this workflow does not accept"
+              exit 1
+            fi
+            if ! git rev-parse --verify --quiet "refs/remotes/origin/${b}^{commit}" > /dev/null; then
+              echo "::error::ghp: origin/${b} does not resolve (the checkout needs fetch-depth: 0), so the target branch's config cannot be read"
+              exit 1
+            fi
+          done
+          git remote set-head origin "$DEFAULT_BRANCH"
+      - name: Resolve the mode
+        id: mode
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          code=0
+          ghp strict mode --base "origin/${BASE_REF}" > "$RUNNER_TEMP/mode.json" 2> "$RUNNER_TEMP/mode.err" || code=$?
+          tr '\r' ' ' < "$RUNNER_TEMP/mode.err" | sed 's/^/ghp: /'
+          if [ "$code" -ne 0 ]; then
+            echo "::error::ghp strict mode exit ${code}: the mode is not known, so the job fails closed"
+            exit 1
+          fi
+          state=$(python3 -I -c 'import json,sys;d=json.load(open(sys.argv[1]));print(d["mode"]+"/"+d["source"])' "$RUNNER_TEMP/mode.json" 2> /dev/null) || state=
+          case "$state" in
+            strict/*) mode=strict ;;
+            advisory/*) mode=advisory ;;
+            *) echo "::error::ghp: unexpected output of ghp strict mode"; exit 1 ;;
+          esac
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+      - name: Resolve the issue from the branch
+        id: story
+        env:
+          BRANCH: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if ! [[ "$BRANCH" =~ ^[A-Za-z0-9._#][A-Za-z0-9._/#-]*$ ]] || [[ "$BRANCH" == *..* ]]; then
+            echo "::error::ghp: the pull request's branch name holds characters this workflow does not accept"
+            exit 1
+          fi
+          code=0
+          ghp branch --id-from="$BRANCH" --base "origin/${BASE_REF}" > "$RUNNER_TEMP/id.json" 2> "$RUNNER_TEMP/id.err" || code=$?
+          tr '\r' ' ' < "$RUNNER_TEMP/id.err" | sed 's/^/ghp: /'
+          if [ "$code" -eq 1 ] && [ "$MODE" != strict ]; then
+            echo "::notice::ghp: the branch name names no issue (<branch_prefix>gh<n>-<slug>, or #<n>), so the gate is skipped (advisory target)"
+            echo "id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$code" -eq 1 ]; then
+            echo "::error::ghp strict mode: the branch name names no issue (<branch_prefix>gh<n>-<slug>, or #<n>), so the check cannot run and cannot be skipped"
+            exit 1
+          fi
+          if [ "$code" -ne 0 ]; then
+            echo "::error::ghp branch --id-from exit ${code}: fails closed"
+            exit 1
+          fi
+          id=$(tr -d '\n' < "$RUNNER_TEMP/id.json")
+          if ! [[ "$id" =~ ^[1-9][0-9]{0,9}$ ]]; then
+            echo "::error::ghp: unexpected output of ghp branch --id-from"
+            exit 1
+          fi
+          echo "id=${id}" >> "$GITHUB_OUTPUT"
+      - name: Run the gate
+        if: steps.story.outputs.id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STORY_ID: ${{ steps.story.outputs.id }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          rm -f "$RUNNER_TEMP/gate.md"
+          # File names travel NUL-separated into an array, never through the script text; ./ keeps a name like -x from reading as an option.
+          git diff -z --name-only "origin/${BASE_REF}...HEAD" > "$RUNNER_TEMP/changed.bin"
+          changed=()
+          while IFS= read -r -d '' f; do changed+=("./$f"); done < "$RUNNER_TEMP/changed.bin"
+          code=0
+          ghp gate "$STORY_ID" --src . --base "origin/${BASE_REF}" --summary-out "$RUNNER_TEMP/gate.md" --changed ${changed[@]+"${changed[@]}"} > "$RUNNER_TEMP/gate.json" 2> "$RUNNER_TEMP/gate.err" || code=$?
+          tr '\r' ' ' < "$RUNNER_TEMP/gate.err" | sed 's/^/ghp: /'
+          if [ -s "$RUNNER_TEMP/gate.md" ]; then cat "$RUNNER_TEMP/gate.md" >> "$GITHUB_STEP_SUMMARY"; fi
+          if [ "$code" -ne 0 ]; then
+            echo "::error::ghp gate exit ${code} (1: a blocking finding; 2: refused; 3: invalid config or ledger), see the job summary"
+            exit 1
+          fi
+      - name: Run the strict check
+        if: steps.story.outputs.id != '' && steps.mode.outputs.mode == 'strict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STORY_ID: ${{ steps.story.outputs.id }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          if ! [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::ghp: the pull request head is not a commit id"
+            exit 1
+          fi
+          code=0
+          ghp strict check "$STORY_ID" --phase pr --head "$HEAD_SHA" --base "origin/${BASE_REF}" > "$RUNNER_TEMP/strict.json" 2> "$RUNNER_TEMP/strict.err" || code=$?
+          tr '\r' ' ' < "$RUNNER_TEMP/strict.err" | sed 's/^/ghp: /'
+          if [ "$code" -eq 0 ]; then
+            echo "ghp strict check passed."
+            exit 0
+          fi
+          # Rule ids only: a finding's detail can quote ledger or issue text.
+          rules=$(python3 -I -c 'import json,re,sys;print(" ".join(re.sub("[^A-Za-z0-9_-]","",str(x["rule"]))[:40] for x in json.load(open(sys.argv[1]))["findings"][:20]))' "$RUNNER_TEMP/strict.json" 2> /dev/null) || rules=
+          echo "::error::ghp strict check exit ${code} - rule ids: ${rules:-none (the check could not run, see the log)}"
+          exit 1

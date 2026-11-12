@@ -1,0 +1,5 @@
+{
+  "owner": "octo",
+  "repo": "demo",
+  "gate": {"block": ["ac_traceability"]}
+}

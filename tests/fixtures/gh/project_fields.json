@@ -1,0 +1,18 @@
+{
+  "user": {
+    "projectV2": {
+      "id": "PVT_kwFictional0003",
+      "fields": {
+        "pageInfo": {"hasNextPage": false, "endCursor": "f3"},
+        "nodes": [
+          {"__typename": "ProjectV2Field"},
+          {"__typename": "ProjectV2SingleSelectField", "id": "PVTSSF_FictionalPriority", "name": "Priority",
+           "options": [{"id": "aa000001", "name": "Low"}, {"id": "aa000002", "name": "High"}]},
+          {"__typename": "ProjectV2SingleSelectField", "id": "PVTSSF_FictionalStatus", "name": "Status",
+           "options": [{"id": "f75ad846", "name": "Todo"}, {"id": "47fc9ee4", "name": "In Progress"},
+                       {"id": "98236657", "name": "Done"}]}
+        ]
+      }
+    }
+  }
+}

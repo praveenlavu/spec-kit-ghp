@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "version": 1,
+  "status": "draft",
+  "stacks": [
+    {
+      "id": "salesforce",
+      "root": ".",
+      "commands": {
+        "test": {
+          "run": "npm ci --ignore-scripts && npm run test:unit",
+          "source": "S1",
+          "why": "S1: test:unit runs sfdx-lwc-jest (LWC Jest only, no org). S2: npm ci needs a lockfile. S3: --ignore-scripts also skips the project's own prepare and postinstall (S13 runs husky there). Unverified: dependency scripts skipped on every npm version. Apex is never run here."
+        },
+        "coverage": {
+          "run": "npm run test:unit:coverage",
+          "source": "S1",
+          "why": "S1 recommends the script test:unit:coverage (adds --coverage). LWC Jest coverage only; the 75% rule in S4 is about Apex and is checked in an org. No threshold is set here."
+        },
+        "security": [
+          {
+            "run": "sf code-analyzer run --severity-threshold 2",
+            "source": "S10",
+            "why": "S10: code-analyzer run; the plugin must be installed first (the seed installs nothing); needs no org. Unverified: the --severity-threshold flag (seen in local sf help only), the level 2 (high), and whether an engine fetches code at run time."
+          }
+        ],
+        "org_only": [
+          {
+            "run": "sf apex run test --test-level RunLocalTests --code-coverage --result-format human --wait 20",
+            "source": "S5",
+            "why": "S5 lists these flags; it needs a target org (--target-org or a default org) and View All Data. Unverified design choices: --wait 20 minutes and the human format. strict never runs it; run it only on the human's yes."
+          },
+          {
+            "run": "sf project deploy start --dry-run --test-level RunLocalTests",
+            "source": "S6",
+            "why": "S6: --dry-run validates and runs Apex tests without saving; needs a target org; for production it points to sf project deploy validate instead. Unverified: that a dry run is allowed on production. Run only on the human's yes."
+          }
+        ]
+      },
+      "conventions": [
+        {
+          "rule": "Keep LWC Jest tests in a __tests__ folder inside the component's bundle, as the reference sample app does.",
+          "source": "S12"
+        },
+        {
+          "rule": "Unverified for other projects (one sample app only): if the project defines lint and prettier:verify scripts, run them (npm run lint, npm run prettier:verify) before review.",
+          "source": "S13"
+        },
+        {
+          "rule": "Add @salesforce/sfdx-lwc-jest as a dev dependency and give package.json a test:unit script that runs sfdx-lwc-jest; watch, debug and coverage variants add flags.",
+          "source": "S1"
+        },
+        {
+          "rule": "Pass extra Jest options after -- (for example sfdx-lwc-jest -- --json); a jest.config.js at the project root extends the default config.",
+          "source": "S1"
+        },
+        {
+          "rule": "Install with npm ci: it needs a lockfile, errors when the lockfile and package.json differ and never rewrites either.",
+          "source": "S2"
+        },
+        {
+          "rule": "With ignore-scripts set, npm test and npm run still run the script you name but skip its pre and post scripts.",
+          "source": "S3"
+        },
+        {
+          "rule": "The seed test command skips the project's own prepare script; a repo that installs git hooks there (the sample app runs husky) gets no hooks in the strict clone.",
+          "source": "S13"
+        },
+        {
+          "rule": "Cover at least 75% of the Apex with unit tests before a production deploy (100% where possible); give every trigger at least one covered line; write tests that finish without exceptions.",
+          "source": "S4"
+        },
+        {
+          "rule": "Write Apex triggers and classes for many records per transaction: Trigger.new can hold one record or many.",
+          "source": "S8"
+        },
+        {
+          "rule": "Do not run SOQL inside FOR loops: gather the IDs and run one query with IN outside the loop; the limit is 100 queries per transaction context, shared by triggers, classes, flows and API calls.",
+          "source": "S7"
+        },
+        {
+          "rule": "Unverified (no fetched page states it): do not run DML inside loops; collect the records and run DML once after the loop.",
+          "source": "unverified"
+        },
+        {
+          "rule": "Watch the CPU budget: synchronous Apex gets 10,000 ms and asynchronous 60,000 ms per transaction; replace per-record queries with maps and single queries.",
+          "source": "S9"
+        },
+        {
+          "rule": "Run Apex tests only in an org (sf apex run test needs a target org and View All Data); keep such commands in org_only so strict never runs them.",
+          "source": "S5"
+        },
+        {
+          "rule": "RunLocalTests is the default test level for production deploys that include Apex classes or triggers; NoTestRun applies only to development environments.",
+          "source": "S6"
+        },
+        {
+          "rule": "Run Code Analyzer (Apex, JavaScript, HTML, CSS, Flow metadata) and read its results file.",
+          "source": "S11"
+        },
+        {
+          "rule": "Install the Code Analyzer plugin before running it; some engines need Java 11+ or Python 3.10+, and the GitHub Action does not fail a build on violations by itself.",
+          "source": "S10"
+        }
+      ],
+      "dod": [
+        {
+          "item": "npm run test:unit passes (LWC Jest, no org needed)",
+          "source": "S1"
+        },
+        {
+          "item": "Apex tests pass in an org and cover at least 75% of the Apex before a production deploy (human-run, org_only)",
+          "source": "S4"
+        },
+        {
+          "item": "Every Apex trigger has at least one line of test coverage",
+          "source": "S4"
+        },
+        {
+          "item": "No SOQL query inside a FOR loop in changed Apex",
+          "source": "S7"
+        },
+        {
+          "item": "Code Analyzer reports no violation at the chosen severity threshold (the level is an unverified choice)",
+          "source": "S10"
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "S1": {
+      "kind": "official",
+      "url": "https://github.com/salesforce/sfdx-lwc-jest",
+      "retrieved": "2026-10-31",
+      "evidence": "Installed as a dev dependency (the page shows yarn). Recommended scripts: test:unit runs sfdx-lwc-jest, with :watch, :debug and :coverage variants adding flags; options after -- go to Jest; a root jest.config.js extends the default. The page does not say where test files live."
+    },
+    "S2": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-ci",
+      "retrieved": "2026-10-31",
+      "evidence": "npm ci needs an existing lockfile, exits with an error instead of updating it when it disagrees with package.json, removes node_modules first and never writes package.json or lockfiles. Its config list says ignore-scripts outranks allowing dependency install scripts."
+    },
+    "S3": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/using-npm/config#ignore-scripts",
+      "retrieved": "2026-10-31",
+      "evidence": "The ignore-scripts setting (default false) stops npm running scripts from package.json files; npm test and npm run still run the script you name, but not its pre or post scripts. It does not say whether dependencies' install scripts are covered."
+    },
+    "S4": {
+      "kind": "official",
+      "url": "https://help.salesforce.com/s/articleView?id=000385650&language=en_US&type=1",
+      "retrieved": "2026-10-31",
+      "evidence": "At least 75% of Apex must be covered by unit tests to deploy to production (100% advised where possible); every trigger needs at least one covered line; tests should finish without exceptions. No coverage formula is given, and it does not say failing tests block a deploy."
+    },
+    "S5": {
+      "kind": "official",
+      "url": "https://github.com/salesforcecli/plugin-apex",
+      "retrieved": "2026-10-31",
+      "evidence": "sf apex run test runs Apex tests in a target org (--target-org or a default org) and needs the View All Data permission. Flags include --test-level (RunLocalTests default), --code-coverage, --result-format and --wait (minutes). Exit codes are not documented."
+    },
+    "S6": {
+      "kind": "official",
+      "url": "https://github.com/salesforcecli/plugin-deploy-retrieve",
+      "retrieved": "2026-10-31",
+      "evidence": "sf project deploy start has --dry-run (validates and runs Apex tests without saving) and --test-level; RunLocalTests is the default for production deploys with Apex classes or triggers, and NoTestRun applies only to development environments. Needs a target org."
+    },
+    "S7": {
+      "kind": "official",
+      "url": "https://help.salesforce.com/s/articleView?id=000386220&language=en_US&type=1",
+      "retrieved": "2026-10-31",
+      "evidence": "The SOQL governor limit is 100 queries per transaction context, counting triggers, classes, flows and API calls together. Advice: no SOQL inside FOR loops; gather IDs and run one query with IN outside the loop; design for many records per transaction. No code examples."
+    },
+    "S8": {
+      "kind": "official",
+      "url": "https://help.salesforce.com/s/articleView?id=000384697&language=en_US&type=1",
+      "retrieved": "2026-10-31",
+      "evidence": "Trigger.new can hold one record or many, because triggers fire for a single insert and for bulk inserts through the API or Apex. The article gives no bulk-safe patterns and no limits."
+    },
+    "S9": {
+      "kind": "official",
+      "url": "https://help.salesforce.com/s/articleView?id=005132111&language=en_US&type=1",
+      "retrieved": "2026-10-31",
+      "evidence": "The synchronous Apex CPU limit is 10,000 ms and the asynchronous limit 60,000 ms per transaction. Its examples replace per-record queries with maps and single queries; it states no rule on loops and no DML or SOQL limits."
+    },
+    "S10": {
+      "kind": "official",
+      "url": "https://github.com/marketplace/actions/run-salesforce-code-analyzer",
+      "retrieved": "2026-10-31",
+      "evidence": "The Code Analyzer GitHub Action runs code-analyzer run (the v5 CLI plugin), which is installed separately with sf plugins install. Needs Node 20.9+, Java 11+ for some engines, Python 3.10+ for some. The action itself does not fail the workflow on violations."
+    },
+    "S11": {
+      "kind": "official",
+      "url": "https://github.com/forcedotcom/code-analyzer",
+      "retrieved": "2026-10-31",
+      "evidence": "Code Analyzer is a unified tool for analysing Apex, JavaScript, HTML, CSS and metadata such as Flows, and it writes a results file of rule violations. The page gives no install steps, run flags or exit codes."
+    },
+    "S12": {
+      "kind": "implementation",
+      "url": "https://github.com/trailheadapps/dreamhouse-lwc/tree/main/force-app/main/default/lwc/brokerCard",
+      "retrieved": "2026-10-31",
+      "evidence": "In the dreamhouse-lwc sample app, the brokerCard component bundle holds its html, js and meta files plus a __tests__ folder for its Jest tests."
+    },
+    "S13": {
+      "kind": "implementation",
+      "url": "https://github.com/trailheadapps/dreamhouse-lwc/blob/main/package.json",
+      "retrieved": "2026-10-31",
+      "evidence": "dreamhouse-lwc package.json: test:unit runs sfdx-lwc-jest (watch, debug, coverage variants); lint and prettier:verify scripts exist; prepare runs husky for git hooks; lint-staged runs checks on commit; no engines field."
+    }
+  }
+}

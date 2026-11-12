@@ -1,0 +1,110 @@
+{
+  "repository": {
+    "issue": {
+      "comments": {
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "Y3Vyc29yOjQ="
+        },
+        "nodes": [
+          {
+            "id": "IC_kwDOFictional0001",
+            "databaseId": 6000000001,
+            "fullDatabaseId": "6000000001",
+            "author": {
+              "__typename": "User",
+              "login": "octo-author",
+              "databaseId": 1001
+            },
+            "authorAssociation": "OWNER",
+            "body": "/approve D1\r\nLooks fine.",
+            "createdAt": "2026-01-01T10:00:00Z",
+            "lastEditedAt": null,
+            "includesCreatedEdit": false,
+            "isMinimized": false,
+            "minimizedReason": null,
+            "userContentEdits": {
+              "totalCount": 0
+            },
+            "viewerCanDelete": true,
+            "viewerCanMinimize": true,
+            "viewerCanUpdate": true,
+            "viewerDidAuthor": true
+          },
+          {
+            "id": "IC_kwDOFictional0002",
+            "databaseId": 6000000002,
+            "fullDatabaseId": "6000000002",
+            "author": {
+              "__typename": "User",
+              "login": "octo-author",
+              "databaseId": 1001
+            },
+            "authorAssociation": "OWNER",
+            "body": "/approve D1 (edited)",
+            "createdAt": "2026-01-01T10:05:00Z",
+            "lastEditedAt": "2026-01-01T10:06:00Z",
+            "includesCreatedEdit": true,
+            "isMinimized": false,
+            "minimizedReason": null,
+            "userContentEdits": {
+              "totalCount": 2
+            },
+            "viewerCanDelete": true,
+            "viewerCanMinimize": true,
+            "viewerCanUpdate": true,
+            "viewerDidAuthor": true
+          },
+          {
+            "id": "IC_kwDOFictional0003",
+            "databaseId": 6000000003,
+            "fullDatabaseId": "6000000003",
+            "author": {
+              "__typename": "User",
+              "login": "octo-reviewer",
+              "databaseId": 1002
+            },
+            "authorAssociation": "OWNER",
+            "body": "> quoted text\nreply",
+            "createdAt": "2026-01-01T10:10:00Z",
+            "lastEditedAt": null,
+            "includesCreatedEdit": false,
+            "isMinimized": true,
+            "minimizedReason": "outdated",
+            "userContentEdits": {
+              "totalCount": 0
+            },
+            "viewerCanDelete": true,
+            "viewerCanMinimize": true,
+            "viewerCanUpdate": true,
+            "viewerDidAuthor": false
+          },
+          {
+            "id": "IC_kwDOFictional0004",
+            "databaseId": 6000000004,
+            "fullDatabaseId": "6000000004",
+            "author": {
+              "__typename": "Bot",
+              "login": "ghp-fixture-app",
+              "databaseId": 7000001
+            },
+            "authorAssociation": "OWNER",
+            "body": "[spec-kit-ghp:note] automated",
+            "createdAt": "2026-01-01T10:15:00Z",
+            "lastEditedAt": null,
+            "includesCreatedEdit": false,
+            "isMinimized": false,
+            "minimizedReason": null,
+            "userContentEdits": {
+              "totalCount": 0
+            },
+            "viewerCanDelete": true,
+            "viewerCanMinimize": true,
+            "viewerCanUpdate": true,
+            "viewerDidAuthor": false
+          }
+        ]
+      }
+    }
+  }
+}

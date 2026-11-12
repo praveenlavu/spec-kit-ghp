@@ -1,0 +1,10 @@
+.superpowers/
+.venv/
+__pycache__/
+*.pyc
+.ado/
+.scrub-denylist
+spike/out/
+.ghp/
+build/
+*.egg-info/

@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "version": 1,
+  "status": "draft",
+  "stacks": [
+    {
+      "id": "python",
+      "root": ".",
+      "commands": {
+        "test": {
+          "run": "PYTHONPATH=src python3 -m pytest -q",
+          "source": "S3",
+          "why": "S3: PYTHONPATH entries come before site-packages on sys.path, so ./src wins over an installed copy. Unverified design choices: -q, and that dependencies and test tools must already be installed (the run installs nothing; the package itself need not be, because of PYTHONPATH=src)."
+        },
+        "lint": {
+          "run": "ruff check --no-fix",
+          "source": "S12"
+        },
+        "format_check": {
+          "run": "ruff format --check",
+          "source": "S8"
+        },
+        "coverage": {
+          "run": "PYTHONPATH=src python3 -m pytest -q --cov",
+          "source": "S9"
+        },
+        "security": [
+          {
+            "run": "pip-audit .",
+            "source": "S10"
+          }
+        ]
+      },
+      "conventions": [
+        {
+          "rule": "Name test files test_*.py or *_test.py so pytest discovers them.",
+          "source": "S1"
+        },
+        {
+          "rule": "Keep tests in a directory outside the application code.",
+          "source": "S1"
+        },
+        {
+          "rule": "Develop against an editable install of the package, as pytest suggests; the seed test command still puts ./src first.",
+          "source": "S1"
+        },
+        {
+          "rule": "In a src layout the package must be installed to be tested, which guards against importing the in-development copy by accident; strict runs deliberately import the clone's ./src (PYTHONPATH=src), so here the layout is what matters, not an install.",
+          "source": "S4"
+        },
+        {
+          "rule": "Call pytest as python -m pytest when the current directory must be importable; the bare pytest command does not add it.",
+          "source": "S2"
+        },
+        {
+          "rule": "Keep pytest settings in pyproject.toml under [tool.pytest.ini_options] (or another supported config file).",
+          "source": "S5"
+        },
+        {
+          "rule": "If the project sets a minimum coverage, enforce it with pytest-cov's --cov-fail-under.",
+          "source": "S9"
+        },
+        {
+          "rule": "Format code with ruff format; --check lists files that would change and exits non-zero without writing.",
+          "source": "S8"
+        },
+        {
+          "rule": "Module names are short and all lowercase.",
+          "source": "S11"
+        }
+      ],
+      "dod": [
+        {
+          "item": "pytest exits 0: every collected test passes",
+          "source": "S6"
+        },
+        {
+          "item": "ruff check reports no violations",
+          "source": "S7"
+        },
+        {
+          "item": "ruff format --check reports no unformatted files",
+          "source": "S8"
+        },
+        {
+          "item": "pip-audit reports no known vulnerabilities",
+          "source": "S10"
+        },
+        {
+          "item": "Coverage stays at or above the project's minimum, when one is set",
+          "source": "S9"
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "S1": {
+      "kind": "official",
+      "url": "https://docs.pytest.org/en/stable/explanation/goodpractices.html",
+      "retrieved": "2026-10-31",
+      "evidence": "pytest's good-practices page: discovery looks for test_*.py and *_test.py files, tests may live in a separate directory outside the application code, and developing against an editable install is recommended."
+    },
+    "S2": {
+      "kind": "official",
+      "url": "https://docs.pytest.org/en/stable/how-to/usage.html",
+      "retrieved": "2026-10-31",
+      "evidence": "Running pytest through the interpreter is nearly the same as the pytest script, except that the interpreter variant also adds the current directory to sys.path."
+    },
+    "S3": {
+      "kind": "official",
+      "url": "https://docs.python.org/3/library/sys_path_init.html",
+      "retrieved": "2026-10-31",
+      "evidence": "Python builds sys.path in a fixed order: PYTHONPATH entries are added before the standard library, and site-packages directories come last; with -m the current directory is the first entry."
+    },
+    "S4": {
+      "kind": "official",
+      "url": "https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/",
+      "retrieved": "2026-10-31",
+      "evidence": "The src layout helps avoid accidental use of the in-development copy of the code, and it requires the package to be installed (for example in development mode) before it can be tested."
+    },
+    "S5": {
+      "kind": "official",
+      "url": "https://docs.pytest.org/en/stable/reference/customize.html",
+      "retrieved": "2026-10-31",
+      "evidence": "A pyproject.toml with a [tool.pytest.ini_options] table is one of the places pytest reads its configuration from."
+    },
+    "S6": {
+      "kind": "official",
+      "url": "https://docs.pytest.org/en/stable/reference/exit-codes.html",
+      "retrieved": "2026-10-31",
+      "evidence": "pytest exit code 0 means all collected tests passed; exit code 1 means tests ran but some failed."
+    },
+    "S7": {
+      "kind": "official",
+      "url": "https://docs.astral.sh/ruff/linter/",
+      "retrieved": "2026-10-31",
+      "evidence": "ruff check is the linter's main entry point; without a path it lints the current directory, and by default it exits 1 when violations are found and 0 when there are none."
+    },
+    "S8": {
+      "kind": "official",
+      "url": "https://docs.astral.sh/ruff/formatter/",
+      "retrieved": "2026-10-31",
+      "evidence": "ruff format without a path formats the current directory; with --check it writes nothing and exits non-zero when any file would be reformatted."
+    },
+    "S9": {
+      "kind": "official",
+      "url": "https://pytest-cov.readthedocs.io/en/latest/config.html",
+      "retrieved": "2026-10-31",
+      "evidence": "pytest-cov's --cov option takes an optional path or package to measure, and --cov-fail-under fails the run when total coverage is below the given minimum."
+    },
+    "S10": {
+      "kind": "official",
+      "url": "https://github.com/pypa/pip-audit",
+      "retrieved": "2026-10-31",
+      "evidence": "pip-audit scans Python environments for packages with known vulnerabilities; pip-audit . audits a local project, and it exits 0 when none are found and 1 when some are."
+    },
+    "S11": {
+      "kind": "official",
+      "url": "https://peps.python.org/pep-0008/",
+      "retrieved": "2026-10-31",
+      "evidence": "PEP 8 says modules should have short, all-lowercase names."
+    },
+    "S12": {
+      "kind": "official",
+      "url": "https://docs.astral.sh/ruff/settings/",
+      "retrieved": "2026-10-31",
+      "evidence": "The ruff fix setting turns automatic fixing on by default and is overridden by the --fix and --no-fix command-line flags, so --no-fix lets a check run without rewriting files even when a project sets fix = true."
+    }
+  }
+}

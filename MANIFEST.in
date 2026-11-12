@@ -1,0 +1,2 @@
+# The tests need tests/conftest.py and tests/fixtures/, which the sdist would not carry: run them from a git checkout.
+prune tests

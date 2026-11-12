@@ -1,0 +1,145 @@
+# Fixture for tests/test_speckit_contract.py (T33, ported from spec-kit-ado). It copies the SHAPE of the shipped ghp-lifecycle workflow the kit depends
+# on, with no `ghp` call: the shipped workflow id, the input names (issue_number and the 12 verdict_* inputs the poller resumes with) and shipped step
+# ids, so `approvals.read_run` reads its state.json; a top-level gate (`review-spec`) and a gate inside a do-while loop (`approve-questions`), both with
+# `verdict_input`. The loop is deliberately NOT capped here: the tests show the persisted-verdict hazard the shipped cap guards. The shell step
+# `questions-apply` is steered by marker files the test creates in the project directory: `fail-apply` makes it exit 2, `again` makes it print "again"
+# on stderr once (the loop repeats). Not shipped, not installed.
+schema_version: "1.0"
+workflow:
+  id: "ghp-lifecycle"
+  name: "Contract fixture"
+  version: "0.0.1"
+  author: "contoso"
+  description: "Gate inside a loop, for the Spec Kit contract tests."
+inputs:
+  issue_number:
+    type: "number"
+    required: true
+  verdict_review_spec:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_plan_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_wait_po_answers:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_answers_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_review_plan:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_push:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_decisions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_sync:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_review_review:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_approve_pr:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+  verdict_wait_po_validation:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+steps:
+  - id: "pull"
+    type: "shell"
+    run: |
+      echo pull >> trace.txt
+
+  - id: "review-spec"
+    type: "gate"
+    verdict_input: "verdict_review_spec"
+    message: "First gate."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "questions-loop"
+    type: "do-while"
+    condition: "{{ steps.questions-apply.output.stderr | contains('again') }}"
+    steps:
+      - id: "questions-preview"
+        type: "shell"
+        run: |
+          echo preview >> trace.txt
+
+      - id: "approve-questions"
+        type: "gate"
+        verdict_input: "verdict_approve_questions"
+        message: "Gate inside a loop."
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "questions-apply"
+        type: "shell"
+        run: |
+          echo apply >> trace.txt
+          if [ -e fail-apply ]; then echo boom >&2; exit 2; fi
+          if [ -e again ]; then rm again; echo again >&2; fi
+
+  - id: "questions-applied"
+    type: "shell"
+    run: |
+      echo applied >> trace.txt

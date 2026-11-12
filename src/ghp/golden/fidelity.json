@@ -1,0 +1,86 @@
+[
+ {
+  "id": "G1",
+  "ac": "A refund over 500.00 USD needs manager approval: the response status is `pending_approval`.",
+  "test": "def test_large_refund_needs_approval(client):\n    resp = client.post(\"/refunds\", json={\"order\": \"CT-1001\", \"amount\": \"750.00\"})\n    assert resp.status_code == 200\n",
+  "lang": "Python",
+  "label": "does not assert"
+ },
+ {
+  "id": "G2",
+  "ac": "A Fabrikam discount code is rejected with reason `expired` once its expiry date has passed.",
+  "test": "test('expired code is rejected', () => {\n  const clock = fakeClock('2026-03-02');\n  const result = applyCode({ code: 'FAB-SPRING', expires: '2026-03-01' }, clock);\n  expect(result.accepted).toBe(false);\n  expect(result.reason).toBe('expired');\n});\n",
+  "lang": "JavaScript",
+  "label": "asserts"
+ },
+ {
+  "id": "G3",
+  "ac": "An Opportunity can be closed Won only when it has an Amount and a Contoso contract id.",
+  "test": "@IsTest static void closeWonNeedsAmount() {\n    Opportunity o = new Opportunity(Name = 'Fabrikam renewal', StageName = 'Prospecting', CloseDate = Date.today(), ContractId__c = 'C-77');\n    insert o;\n    o.StageName = 'Closed Won';\n    try {\n        update o;\n        System.assert(false, 'expected a DML failure');\n    } catch (DmlException e) {\n        System.assert(e.getMessage().contains('Amount'));\n    }\n}\n",
+  "lang": "Apex",
+  "label": "partial"
+ },
+ {
+  "id": "G4",
+  "ac": "Exporting an empty report returns a CSV with only the header row `sku,qty,price`.",
+  "test": "def test_empty_export_is_header_only():\n    out = export_csv([])\n    assert out.splitlines() == [\"sku,qty,price\"]\n",
+  "lang": "Python",
+  "label": "asserts"
+ },
+ {
+  "id": "G5",
+  "ac": "A cart with more than 10 items gets free shipping.",
+  "test": "describe('shipping', () => {\n  it.skip('is free above 10 items', () => {\n    const cart = cartWith(11);\n    expect(shippingFor(cart)).toBe(0);\n  });\n});\n",
+  "lang": "JavaScript",
+  "label": "does not assert"
+ },
+ {
+  "id": "G6",
+  "ac": "When a Case is escalated its Priority becomes High and the Contoso support queue owns it.",
+  "test": "@IsTest static void escalateSetsPriorityAndOwner() {\n    Case c = new Case(Subject = 'Fabrikam outage', Priority = 'Low');\n    insert c;\n    CaseService.escalate(c.Id);\n    Case r = [SELECT Priority, OwnerId FROM Case WHERE Id = :c.Id];\n    System.assertEquals('High', r.Priority);\n    System.assertEquals(supportQueueId(), r.OwnerId);\n}\n",
+  "lang": "Apex",
+  "label": "asserts"
+ },
+ {
+  "id": "G7",
+  "ac": "A password reset link expires after 30 minutes and can be used only once.",
+  "test": "def test_reset_link_expires(clock):\n    link = make_reset_link(user_id=1001)\n    clock.advance(minutes=31)\n    assert redeem(link).ok is False\n",
+  "lang": "Python",
+  "label": "partial"
+ },
+ {
+  "id": "G8",
+  "ac": "The invoice total is the sum of the line totals plus 8% tax, rounded to two decimals.",
+  "test": "test('invoice total', () => {\n  const inv = buildInvoice([{ qty: 2, unit: 10 }, { qty: 1, unit: 5 }]);\n  expect(inv.total).toBeGreaterThan(25);\n});\n",
+  "lang": "JavaScript",
+  "label": "partial"
+ },
+ {
+  "id": "G9",
+  "ac": "Closing a Case stamps Closed_By__c with the id of the user who closed it.",
+  "test": "@IsTest static void closingACase() {\n    Case c = new Case(Subject = 'Contoso login', Status = 'New');\n    insert c;\n    c.Status = 'Closed';\n    update c;\n    Case r = [SELECT Status FROM Case WHERE Id = :c.Id];\n    System.assertEquals('Closed', r.Status);\n}\n",
+  "lang": "Apex",
+  "label": "does not assert"
+ },
+ {
+  "id": "G10",
+  "ac": "Importing a CSV with a duplicate order number rejects the whole file and reports the duplicate row number.",
+  "test": "def test_duplicate_order_number_rejected():\n    result = import_orders(\"order\\nA-1\\nA-1\\n\")\n    # assert result.rejected\n    # assert result.duplicate_row == 3\n    assert result is not None\n",
+  "lang": "Python",
+  "label": "does not assert"
+ },
+ {
+  "id": "G11",
+  "ac": "Saving a profile with a blank display name shows the error `Name is required` and does not call the API.",
+  "test": "test('blank name is refused locally', async () => {\n  const api = { save: jest.fn() };\n  const form = mountForm({ api });\n  form.setName('   ');\n  await form.submit();\n  expect(form.error()).toBe('Name is required');\n  expect(api.save).not.toHaveBeenCalled();\n});\n",
+  "lang": "JavaScript",
+  "label": "asserts"
+ },
+ {
+  "id": "G12",
+  "ac": "A Lead from a Fabrikam web form goes to the EMEA queue when its country is in Europe, otherwise to the Global queue.",
+  "test": "@IsTest static void europeanLeadGoesToEmea() {\n    Lead l = new Lead(LastName = 'Fictional', Company = 'Fabrikam', Country = 'Germany');\n    insert l;\n    System.assertEquals(emeaQueueId(), [SELECT OwnerId FROM Lead WHERE Id = :l.Id].OwnerId);\n}\n",
+  "lang": "Apex",
+  "label": "partial"
+ }
+]

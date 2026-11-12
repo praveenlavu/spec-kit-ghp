@@ -1,0 +1,56 @@
+# An example consumer workflow (a fictional repository): how a repository calls the reusable workflows of spec-kit-ghp from the pull_request event.
+# Copy it to .github/workflows/ghp.yml and replace every REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA with the same full 40-character commit SHA of
+# praveenlavu/spec-kit-ghp you reviewed: the `uses:` ref picks the workflow file, `ghp_ref` the ghp it installs. A tag can be moved; a commit cannot.
+# Left as is, it fails: `uses:` does not resolve and `ghp_ref` is refused. Each job grants exactly what its workflow declares (a called workflow
+# never gets more than its caller). GHP_PROJECT_TOKEN is optional: a classic PAT with repo and project that the owner creates; without it the
+# link job still comments and closes, and says the board was not moved.
+name: ghp checks
+
+on:
+  pull_request:
+    # edited: a base switched after opening (say from an advisory branch to a strict one) fires only `edited`; without it the checks stay green
+    # from the old base. The `!= 'closed'` guards below send it to the checks.
+    types: [opened, synchronize, reopened, edited, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    if: github.event.action != 'closed'
+    permissions:
+      contents: read
+      issues: read
+    uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-gate.yml@REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+    with:
+      ghp_ref: REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+
+  branch-guard:
+    if: github.event.action != 'closed'
+    permissions:
+      contents: read
+      issues: read
+    uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-branch-guard.yml@REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+    with:
+      ghp_ref: REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+
+  strict-verify:
+    if: github.event.action != 'closed'
+    permissions:
+      contents: read
+    uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-strict-verify.yml@REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+    with:
+      ghp_ref: REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+      allow-override: false
+
+  link:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    permissions:
+      contents: read
+      issues: write
+    uses: praveenlavu/spec-kit-ghp/.github/workflows/ghp-link-on-merge.yml@REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+    with:
+      ghp_ref: REPLACE-WITH-ONE-REVIEWED-COMMIT-SHA
+      close-story: false
+    secrets:
+      GHP_PROJECT_TOKEN: ${{ secrets.GHP_PROJECT_TOKEN }}

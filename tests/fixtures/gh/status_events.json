@@ -1,0 +1,15 @@
+{
+  "node": {
+    "timelineItems": {
+      "pageInfo": {"hasNextPage": false, "endCursor": "e3"},
+      "nodes": [
+        {"__typename": "ProjectV2ItemStatusChangedEvent", "actor": {"login": "github-project-automation"},
+         "previousStatus": "", "status": "Todo", "wasAutomated": false, "createdAt": "2026-01-01T10:00:00Z"},
+        {"__typename": "ProjectV2ItemStatusChangedEvent", "actor": {"login": "octo-author"},
+         "previousStatus": "Todo", "status": "In Progress", "wasAutomated": false, "createdAt": "2026-01-02T10:00:00Z"},
+        {"__typename": "ProjectV2ItemStatusChangedEvent", "actor": null,
+         "previousStatus": "In Progress", "status": "Done", "wasAutomated": true, "createdAt": "2026-01-03T10:00:00Z"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "version": 1,
+  "status": "draft",
+  "stacks": [
+    {
+      "id": "typescript",
+      "root": ".",
+      "commands": {
+        "test": {
+          "run": "npm ci --ignore-scripts && npm test",
+          "source": "S1",
+          "why": "S1: npm ci needs a lockfile; its config list says --ignore-scripts outranks allowing dependency install scripts. S2: it skips the project's own scripts too (prepare, postinstall), so such a project needs its own test command. Unverified: dependency scripts skipped on every npm version (seen once)."
+        },
+        "security": [
+          {
+            "run": "npm audit --audit-level=high",
+            "source": "S4",
+            "why": "S4 only defines --audit-level (lowest severity giving a non-zero exit) and says audit sends a description of the dependencies to the registry. The level high is an UNVERIFIED design choice."
+          }
+        ]
+      },
+      "conventions": [
+        {
+          "rule": "Commit package-lock.json; it records the exact dependency tree so later installs rebuild the same one.",
+          "source": "S5"
+        },
+        {
+          "rule": "Install with npm ci in CI: it needs an existing lockfile, errors when the lockfile and package.json differ, removes node_modules first and never writes package.json or the lockfile.",
+          "source": "S1"
+        },
+        {
+          "rule": "Keep test setup in the package.json test script or in pretest/posttest: npm test runs pretest before it and posttest after it.",
+          "source": "S6"
+        },
+        {
+          "rule": "Do not rely on pretest or posttest when ignore-scripts is set: npm test then still runs the test script but skips them (the setting is false by default).",
+          "source": "S2"
+        },
+        {
+          "rule": "Set strict in tsconfig.json compilerOptions; it turns on the whole family of strict type checks.",
+          "source": "S7"
+        },
+        {
+          "rule": "Type-check without writing files using the noEmit option (tsc --noEmit).",
+          "source": "S10"
+        },
+        {
+          "rule": "With Node's built-in test runner (node --test), name test files *.test, *-test, *_test, test-* or test (.js/.cjs/.mjs, or .ts/.cts/.mts), or put them in a test directory; otherwise pass the file globs.",
+          "source": "S8"
+        },
+        {
+          "rule": "If the project uses ESLint, run eslint with no file arguments to lint the current directory; its exit code is 1 when errors are found and 2 for a configuration or internal problem.",
+          "source": "S9"
+        }
+      ],
+      "dod": [
+        {
+          "item": "npm test runs the package.json test script and it passes",
+          "source": "S3"
+        },
+        {
+          "item": "npm ci succeeds: package-lock.json is committed and matches package.json",
+          "source": "S1"
+        },
+        {
+          "item": "npm audit --audit-level=high exits 0: no known vulnerability at high severity or above",
+          "source": "S4"
+        },
+        {
+          "item": "If the project uses ESLint, eslint exits 0: no lint errors",
+          "source": "S9"
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "S1": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-ci",
+      "retrieved": "2026-10-31",
+      "evidence": "npm ci needs an existing lockfile, exits with an error instead of updating it when it disagrees with package.json, removes node_modules first and never writes package.json or lockfiles. Its config list says ignore-scripts outranks allowing dependency install scripts."
+    },
+    "S2": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/using-npm/config#ignore-scripts",
+      "retrieved": "2026-10-31",
+      "evidence": "The ignore-scripts setting (default false) stops npm running scripts from package.json files; npm test and npm run still run the script you name, but not its pre or post scripts. It does not say whether dependencies' install scripts are covered."
+    },
+    "S3": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-test",
+      "retrieved": "2026-10-31",
+      "evidence": "npm test runs the command in the test property of the scripts object in package.json. The page does not describe exit codes."
+    },
+    "S4": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-audit",
+      "retrieved": "2026-10-31",
+      "evidence": "npm audit submits a description of the project's dependencies to the registry and needs a lockfile by default. With vulnerabilities found, the exit code depends on --audit-level, the minimum severity (info to critical) that gives a non-zero exit; none found gives 0."
+    },
+    "S5": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json",
+      "retrieved": "2026-10-31",
+      "evidence": "package-lock.json is meant to be committed to source repositories. It describes the exact dependency tree that was generated, so later installs reproduce the same dependencies."
+    },
+    "S6": {
+      "kind": "official",
+      "url": "https://docs.npmjs.com/cli/v11/using-npm/scripts",
+      "retrieved": "2026-10-31",
+      "evidence": "npm test goes through the stages pretest, test and posttest, and pre and post scripts with a matching name run around any script. The page says nothing about ignore-scripts."
+    },
+    "S7": {
+      "kind": "official",
+      "url": "https://www.typescriptlang.org/tsconfig/#strict",
+      "retrieved": "2026-10-31",
+      "evidence": "The strict compiler option enables a wide range of type checking behavior, and turning it on is equivalent to enabling all the options of the strict-mode family."
+    },
+    "S8": {
+      "kind": "official",
+      "url": "https://nodejs.org/api/test.html",
+      "retrieved": "2026-10-31",
+      "evidence": "node --test runs files matching default patterns: *.test, *-test, *_test, test-*, test and anything under a test directory, as .js/.cjs/.mjs, and also .ts/.cts/.mts unless --no-strip-types is given; or the globs passed. A failing test sets exit code 1. Stable since v20."
+    },
+    "S9": {
+      "kind": "official",
+      "url": "https://eslint.org/docs/latest/use/command-line-interface",
+      "retrieved": "2026-10-31",
+      "evidence": "With no file arguments ESLint lints the current directory. Exit code 0 means no lint errors, 1 means at least one error, 2 means a configuration problem or internal error."
+    },
+    "S10": {
+      "kind": "official",
+      "url": "https://www.typescriptlang.org/docs/handbook/compiler-options.html",
+      "retrieved": "2026-10-31",
+      "evidence": "The --noEmit compiler flag disables emitting files from a compilation. The page does not say whether type errors are still reported or what exit code tsc returns."
+    }
+  }
+}

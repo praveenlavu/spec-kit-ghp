@@ -1,0 +1,31 @@
+# Development-only content: never copied into a consumer project.
+src/
+tests/
+scripts/
+build/
+spike/
+catalog/
+bundle/
+.github/
+docs/plans/
+docs/evidence/
+pyproject.toml
+MANIFEST.in
+.gitignore
+.venv/
+# Local/private working files (also gitignored).
+.git/
+.superpowers/
+.scrub-denylist
+.pytest_cache/
+__pycache__/
+ghp.config.json
+.ghp/
+
+# Repository-only files: not needed by an installed extension.
+SPIKE-G0-BRIEF.md
+SPIKE-RESULTS.md
+CLAUDE.md
+
+# The ghp-lifecycle workflow: installed on its own with `specify workflow add`, never copied by `specify extension add`.
+workflows/

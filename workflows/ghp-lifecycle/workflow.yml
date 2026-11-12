@@ -1,0 +1,568 @@
+schema_version: "1.0"
+workflow:
+  id: "ghp-lifecycle"
+  name: "GitHub issue lifecycle"
+  version: "0.1.0"
+  author: "praveenlavu"
+  description: "GitHub story issue to an open PR: spec, plan, tasks, push, implement, gate, review, PR. Every GitHub write is preview, human gate, apply. The story closes after merge."
+
+requires:
+  speckit_version: ">=1.2.1"
+  integrations:
+    # Advisory, non-exhaustive hint; the workflow runs on any integration the project was initialized with.
+    any:
+      - "claude"
+      - "copilot"
+      - "gemini"
+      - "opencode"
+
+inputs:
+  issue_number:
+    type: "number"
+    required: true
+    prompt: "GitHub issue number of the story"
+  integration:
+    type: "string"
+    default: "auto"
+    prompt: "Integration to use (e.g. claude, copilot, gemini; 'auto' uses the project's initialized integration)"
+  review_model:
+    type: "string"
+    default: ""
+    prompt: "Model for the review step (empty = the integration's default); it feeds only the review step"
+  verdict_review_spec:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate review-spec supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-questions supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_plan_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-plan-questions supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_wait_po_answers:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate wait-po-answers supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_answers_questions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-answers-questions supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_review_plan:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate review-plan supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_push:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-push supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_decisions:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-decisions supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_sync:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-sync supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_review_review:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate review-review supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_approve_pr:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate approve-pr supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+  verdict_wait_po_validation:
+    type: "string"
+    enum:
+      - ""
+      - "approve"
+      - "reject"
+    default: ""
+    prompt: "Verdict for gate wait-po-validation supplied by `ghp approvals sync --resume` (leave empty: the gate asks at a terminal or pauses)"
+
+# Ported from spec-kit-ado's ado-lifecycle (same step shape, renamed; README.md says what differs).
+# Each command step runs the agent once with no chance to reply, so every GitHub write is a triplet: shell preview (--plan-out) -> gate
+# (show_file) -> shell --apply --expect-plan with the preview's file and the same flags; the apply re-renders the plan and refuses (exit 2, fresh
+# plan in <file>.new) unless it is exactly what the gate showed. Each triplet sits in a do-while loop capped at ONE pass (max_iterations: 1): a
+# refused apply ends its loop, and the `*-applied` step after it stops the run (exit 1: start a new run). A second pass would pass the gate with
+# the verdict a resume left in the inputs, applying a plan no human saw.
+# The ONLY interpolation in a shell command is inputs.issue_number, once, in the first line of the step: it is single-quoted and checked to be a
+# positive whole number: the `number` type (checked on `run --input` and `resume --input`) still lets negatives and floats through. A value edited
+# into the run's state.json is not re-checked by the engine; that is no boundary (whoever can edit it can edit this file). Gate messages are constant.
+# Every other non-zero exit (1, 2 or 3) of a step stops the run: nothing is masked; `specify workflow resume` re-runs the failed step.
+# Comment approval (`approval: "comment"` on the target branch; docs/trust-and-limits.md): every gate has its own `verdict_<gate>` input, empty by
+# default (the gate asks at a terminal, or pauses without one). `ghp approvals sync <run> --resume` sets the paused gate's input and resets the
+# others; the authority is the CLI (`ghp approvals check` after the review and wait gates, the apply itself after the write gates).
+# The run ends at the open PR: the story closes after merge (`speckit.ghp.done`), never inside the run.
+steps:
+  # The target branch (who may approve, the gate's base) is read through origin/HEAD: stop before any agent step when it is not set.
+  - id: "base-check"
+    type: "shell"
+    run: |
+      git symbolic-ref --quiet refs/remotes/origin/HEAD > /dev/null || { echo 'ghp-lifecycle: origin/HEAD is not set, so the target branch is unknown: run git remote set-head origin -a (CI: fetch the default branch, then git remote set-head origin <default>), then resume' >&2; exit 2; }
+
+  - id: "pull"
+    command: "speckit.ghp.pull"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow"
+
+  # Strict mode: stop unless the stack profile is approved and covers every detected root. Advisory: exit 0 with notes.
+  - id: "stack-check"
+    type: "shell"
+    run: |
+      ghp stack show --check
+
+  - id: "review-spec"
+    type: "gate"
+    verdict_input: "verdict_review_spec"
+    message: "Review the spec, the open questions in ledger section 2 and the ledger's 'Needs human decision' list before approving."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "check-review-spec"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp approvals check "$n" --gate review-spec
+
+  - id: "questions-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.questions-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "questions-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --plan-out .ghp/plan-questions.md
+
+      - id: "approve-questions"
+        type: "gate"
+        verdict_input: "verdict_approve_questions"
+        message: "Approve posting these open questions to the issue on GitHub (a changed set is posted as a new comment; no comment is ever edited). The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving. If it says nothing to post, approve to continue."
+        show_file: ".ghp/plan-questions.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "questions-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --apply --expect-plan .ghp/plan-questions.md || { [ $? -eq 2 ] && [ -e .ghp/plan-questions.md.new ]; }
+
+  - id: "questions-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-questions.md.new ]; then echo 'ghp-lifecycle: the questions plan changed after approval; start a new run' >&2; exit 1; fi
+
+  - id: "plan"
+    command: "speckit.ghp.plan"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow"
+
+  # Questions the plan phase raised; a changed set is a new marked comment, never an edit. Its own plan file, so the first loop's `.new` guard stays independent.
+  - id: "plan-questions-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.plan-questions-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "plan-questions-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --plan-out .ghp/plan-questions-after-plan.md
+
+      - id: "approve-plan-questions"
+        type: "gate"
+        verdict_input: "verdict_approve_plan_questions"
+        message: "Approve posting the questions the plan raised to the issue on GitHub (a changed set is posted as a new comment; no comment is ever edited). The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving. If it says nothing to post, approve to continue."
+        show_file: ".ghp/plan-questions-after-plan.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "plan-questions-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --apply --expect-plan .ghp/plan-questions-after-plan.md || { [ $? -eq 2 ] && [ -e .ghp/plan-questions-after-plan.md.new ]; }
+
+  - id: "plan-questions-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-questions-after-plan.md.new ]; then echo 'ghp-lifecycle: the plan-questions plan changed after approval; start a new run' >&2; exit 1; fi
+
+  # The engine cannot loop back, so the wait is a gate and the answers are read by a second plan run. The run does not wait by itself: the
+  # operator waits at this gate until the product owner replies. `--close-assumed` records each still-unanswered question as `assumed:`.
+  - id: "wait-po-answers"
+    type: "gate"
+    verdict_input: "verdict_wait_po_answers"
+    message: "The questions the plan raised are posted on the issue. Approve once the product owner has answered them. Approving without their answers accepts the plan's stated assumptions: the next steps read the replies into the ledger, record each question still unanswered as assumed (ticked, and kept in ledger section 2 for review) and revise the plan. Reject to stop."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "check-wait-po-answers"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp approvals check "$n" --gate wait-po-answers
+
+  - id: "sync-po-answers"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp questions "$n" --sync --if-comment-mode
+
+  - id: "plan-with-answers"
+    command: "speckit.ghp.plan"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow --close-assumed"
+
+  # Questions the second plan run raised: never shown at wait-po-answers, so post them; they stay open until answered (ghp done refuses until then).
+  - id: "answers-questions-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.answers-questions-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "answers-questions-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --plan-out .ghp/plan-questions-after-answers.md
+
+      - id: "approve-answers-questions"
+        type: "gate"
+        verdict_input: "verdict_approve_answers_questions"
+        message: "Approve posting the questions the revised plan raised to the issue on GitHub (a changed set is posted as a new comment; no comment is ever edited). They stay open in ledger section 2 until the product owner answers, and the story cannot be closed before then. The new comment is built from section 2, so a question accepted as assumed is listed with its assumption: read the plan file for what the product owner will see. If the preview starts with a warning sign, open the file and read it in full before approving. If it says nothing to post, approve to continue."
+        show_file: ".ghp/plan-questions-after-answers.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "answers-questions-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp questions "$n" --post --apply --expect-plan .ghp/plan-questions-after-answers.md || { [ $? -eq 2 ] && [ -e .ghp/plan-questions-after-answers.md.new ]; }
+
+  - id: "answers-questions-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-questions-after-answers.md.new ]; then echo 'ghp-lifecycle: the answers-questions plan changed after approval; start a new run' >&2; exit 1; fi
+
+  - id: "review-plan"
+    type: "gate"
+    verdict_input: "verdict_review_plan"
+    message: "Review the plan, the spec, the open questions in ledger section 2 and the ledger's 'Needs human decision' list before approving."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "check-review-plan"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp approvals check "$n" --gate review-plan
+
+  - id: "tasks"
+    command: "speckit.ghp.tasks"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }}"
+
+  - id: "push-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.push-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "push-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp push "$n" --plan-out .ghp/plan-push.md
+
+      - id: "approve-push"
+        type: "gate"
+        verdict_input: "verdict_approve_push"
+        message: "Approve creating or updating these sub-issues on GitHub and their Project items. The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving."
+        show_file: ".ghp/plan-push.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "push-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp push "$n" --apply --expect-plan .ghp/plan-push.md || { [ $? -eq 2 ] && [ -e .ghp/plan-push.md.new ]; }
+
+  - id: "push-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-push.md.new ]; then echo 'ghp-lifecycle: the push plan changed after approval; start a new run' >&2; exit 1; fi
+
+  # Strict mode: refuses (exit 2) before implement unless spec, plan, tasks, the sub-issues and the answered questions are in order. Advisory: exit 0.
+  - id: "strict-check-implement"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp strict check "$n" --phase implement
+
+  - id: "implement"
+    command: "speckit.ghp.implement"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow"
+
+  # The decisions implement (and plan) recorded, posted as ONE new comment. `--if-any`: no decisions file is a no-op, the same triplet in every mode.
+  - id: "decisions-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.decisions-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "decisions-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp decisions "$n" --post --if-any --plan-out .ghp/plan-decisions.md
+
+      - id: "approve-decisions"
+        type: "gate"
+        verdict_input: "verdict_approve_decisions"
+        message: "Approve posting these development decisions and assumptions to the issue on GitHub as one new comment. The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving. If it says nothing to post, approve to continue."
+        show_file: ".ghp/plan-decisions.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "decisions-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp decisions "$n" --post --if-any --apply --expect-plan .ghp/plan-decisions.md || { [ $? -eq 2 ] && [ -e .ghp/plan-decisions.md.new ]; }
+
+  - id: "decisions-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-decisions.md.new ]; then echo 'ghp-lifecycle: the decisions plan changed after approval; start a new run' >&2; exit 1; fi
+
+  # Strict mode: runs the tests at every red and green commit and records the result in ledger section 4; exit 2 stops the run. Advisory: exit 0.
+  # The engine's shell default (300 s) would kill the test runs mid-way.
+  - id: "strict-verify"
+    type: "shell"
+    timeout: 7200
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp strict verify "$n"
+
+  - id: "sync-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.sync-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      - id: "sync-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp push "$n" --plan-out .ghp/plan-sync.md
+
+      - id: "approve-sync"
+        type: "gate"
+        verdict_input: "verdict_approve_sync"
+        message: "Approve a second push, which brings the sub-issues on GitHub in line with tasks.md after implement: a task added there becomes a sub-issue, and a changed title, a missing sub-issue link or a missing Project item is put right. Ticking a task changes nothing on GitHub: no sub-issue is opened or closed here. The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving."
+        show_file: ".ghp/plan-sync.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "sync-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp push "$n" --apply --expect-plan .ghp/plan-sync.md || { [ $? -eq 2 ] && [ -e .ghp/plan-sync.md.new ]; }
+
+  - id: "sync-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-sync.md.new ]; then echo 'ghp-lifecycle: the sync plan changed after approval; start a new run' >&2; exit 1; fi
+
+  # The gate command runs `ghp gate` and appends the result to ledger section 4 (a shell step could not).
+  - id: "gate"
+    command: "speckit.ghp.gate"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow"
+
+  # Every non-zero exit of `ghp gate` stops the run (1 a blocking finding or a GitHub error, 2 a refusal, 3 an invalid config or an ambiguous ledger).
+  # bash, not the engine's sh (arrays); a read loop, not mapfile (macOS bash 3.2). File names go through a NUL-delimited file, never into the script.
+  - id: "gate-check"
+    type: "shell"
+    run: |
+      bash <<'EOF'
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD) || { echo 'ghp-lifecycle: origin/HEAD is not set, so the gate has no base' >&2; exit 2; }
+      tmp=$(mktemp) || exit 2
+      git diff -z --name-only "$base...HEAD" > "$tmp" || { rm -f "$tmp"; echo 'ghp-lifecycle: the changed files cannot be listed (a shallow clone? fetch the base branch)' >&2; exit 2; }
+      args=()
+      while IFS= read -r -d '' f; do args+=("./$f"); done < "$tmp"
+      rm -f "$tmp"
+      if [ "${#args[@]}" -gt 0 ]; then args=(--changed "${args[@]}"); fi
+      ghp gate "$n" --src . --base "$base" "${args[@]}" > /dev/null < /dev/null
+      EOF
+
+  # The review reads .ghp/context/<n>.md: refresh it so a product-owner comment posted after pull is not missed. Read-only; a failure stops the run.
+  - id: "refresh-context"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp comments "$n" > /dev/null
+
+  - id: "review"
+    command: "speckit.ghp.review"
+    integration: "{{ inputs.integration }}"
+    model: "{{ inputs.review_model }}"
+    input:
+      args: "{{ inputs.issue_number }} --workflow"
+
+  - id: "review-review"
+    type: "gate"
+    verdict_input: "verdict_review_review"
+    message: "Review the findings logged in the ledger before opening the PR. Reject if implement reported INCOMPLETE tasks: the run aborts and cannot be resumed; finish by hand as the workflow README's section 'Stopping, resuming and recovering' says."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "check-review-review"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp approvals check "$n" --gate review-review
+
+  # Clears files an earlier run left: a refused pr-prepare writes nothing, so pr-preview would send them.
+  - id: "pr-clear"
+    type: "shell"
+    run: |
+      rm -f .ghp/pr-args.json .ghp/pr-body.md
+
+  - id: "pr-prepare"
+    command: "speckit.ghp.pr"
+    integration: "{{ inputs.integration }}"
+    input:
+      args: "{{ inputs.issue_number }} --prepare-only"
+
+  - id: "pr-loop"
+    type: "do-while"
+    max_iterations: 1
+    condition: "{{ steps.pr-apply.output.stderr | contains('plan changed since approval') }}"
+    steps:
+      # The CLI, not the agent, writes the preview the gate shows, with pr-apply's own flags.
+      - id: "pr-preview"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp pr create "$n" --from-prepared --push --plan-out .ghp/plan-pr.md
+
+      - id: "approve-pr"
+        type: "gate"
+        verdict_input: "verdict_approve_pr"
+        message: "Approve pushing the head branch and opening this pull request. The plan file is shown below. If the preview starts with a warning sign, open the file and read it in full before approving."
+        show_file: ".ghp/plan-pr.md"
+        options:
+          - "approve"
+          - "reject"
+        on_reject: "abort"
+
+      - id: "pr-apply"
+        type: "shell"
+        run: |
+          n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+          ghp pr create "$n" --from-prepared --push --apply --expect-plan .ghp/plan-pr.md || { [ $? -eq 2 ] && [ -e .ghp/plan-pr.md.new ]; }
+
+  - id: "pr-applied"
+    type: "shell"
+    run: |
+      if [ -e .ghp/plan-pr.md.new ]; then echo 'ghp-lifecycle: the pr plan changed after approval; start a new run' >&2; exit 1; fi
+
+  # The PR is open. The product owner answers the posted decisions on the issue; this gate is where you wait. It ends the run: `ghp done` after merge.
+  - id: "wait-po-validation"
+    type: "gate"
+    verdict_input: "verdict_wait_po_validation"
+    message: "Approve once the product owner has validated or rejected the posted decisions. Terminal mode: record each verdict first with `ghp decisions <n> --resolve` in your own terminal. Comment mode (approvers configured; --resolve is refused): the approvers' `/approve D<n>` and `/reject D<n>` comments are recorded by `ghp decisions <n> --sync` in the next step. Either way, commit and push the recorded lines to the PR branch before the merge. If nothing was posted just approve."
+    options:
+      - "approve"
+      - "reject"
+    on_reject: "abort"
+
+  - id: "sync-po-validation"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp decisions "$n" --sync --if-comment-mode
+
+  - id: "check-wait-po-validation"
+    type: "shell"
+    run: |
+      n='{{ inputs.issue_number }}'; case "$n" in ''|0*|*[!0-9]*) echo 'ghp-lifecycle: issue_number must be a positive whole number' >&2; exit 2;; esac
+      ghp approvals check "$n" --gate wait-po-validation

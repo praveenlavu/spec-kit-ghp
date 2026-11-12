@@ -1,0 +1,46 @@
+{
+  "a": {
+    "title": "a clean pull request passes",
+    "target_config": "config.advisory.json",
+    "branch": "feature/gh1001-points",
+    "pr_files": {"dod/DoD_1001.md": "ledger_traced.md", "tests/test_points.py": "test_points.py.txt"},
+    "steps": [
+      {"argv": ["strict", "mode", "--base", "origin/main"], "exit": 0, "json": {"mode": "advisory", "source": "pull request"}},
+      {"argv": ["branch", "--id-from=feature/gh1001-points", "--base", "origin/main"], "exit": 0, "contains": ["1001"]},
+      {"argv": ["gate", "1001", "--src", ".", "--base", "origin/main", "--changed", "./dod/DoD_1001.md", "./tests/test_points.py"], "exit": 0,
+       "json": {"blocking": false, "blocked_by": []}}
+    ]
+  },
+  "b": {
+    "title": "a missing AC trace fails",
+    "target_config": "config.advisory.json",
+    "branch": "feature/gh1001-points",
+    "pr_files": {"dod/DoD_1001.md": "ledger_untraced.md", "tests/test_points.py": "test_points.py.txt"},
+    "steps": [
+      {"argv": ["gate", "1001", "--src", ".", "--base", "origin/main", "--changed", "./dod/DoD_1001.md", "./tests/test_points.py"], "exit": 1,
+       "json": {"blocking": true, "blocked_by": ["ac_traceability"]}}
+    ]
+  },
+  "c": {
+    "title": "a forged config edit in the pull request is ignored",
+    "target_config": "config.strict.json",
+    "branch": "feature/gh1001-points",
+    "pr_files": {"ghp.config.json": "config.forged.json", "dod/DoD_1001.md": "ledger_untraced.md", "tests/test_points.py": "test_points.py.txt"},
+    "steps": [
+      {"argv": ["strict", "mode", "--base", "origin/main"], "exit": 0, "json": {"mode": "strict", "source": "target branch"}},
+      {"argv": ["gate", "1001", "--src", ".", "--base", "origin/main", "--changed", "./ghp.config.json", "./dod/DoD_1001.md", "./tests/test_points.py"],
+       "exit": 1, "json": {"blocking": true, "config": "target branch (strict)"}}
+    ]
+  },
+  "d": {
+    "title": "Closes into a non-default base is warned",
+    "target_config": "config.advisory.json",
+    "other_bases": ["release/1.0"],
+    "branch": "feature/gh1001-points",
+    "pr_files": {"dod/DoD_1001.md": "ledger_traced.md", "tests/test_points.py": "test_points.py.txt", "body.md": "body.md"},
+    "steps": [
+      {"argv": ["pr", "create", "1001", "--title", "Points on purchases", "--body-file", "body.md", "--base", "release/1.0", "--head", "feature/gh1001-points"],
+       "exit": 0, "contains": ["base 'release/1.0' is not the default branch 'main': Closes keywords are ignored; `ghp done` will close it", "Closes #1001"]}
+    ]
+  }
+}

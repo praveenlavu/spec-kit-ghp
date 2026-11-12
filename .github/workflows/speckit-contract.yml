@@ -1,0 +1,75 @@
+name: Spec Kit contract
+
+# Weekly canary: do the Spec Kit workflow-engine behaviours this kit relies on still hold on the minimum and on the latest Spec Kit (X6)? It drives the
+# real `specify` CLI (tests/test_speckit_contract.py and tests/test_workflow.py with SPECKIT_CONTRACT=1). No secret, read-only token. Not a PR check:
+# a red run here means "read the compatibility notes", not "block a PR".
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Spec Kit ${{ matrix.speckit }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # minimum: upstream v1.2.1, the floor (requires.speckit_version >=1.2.1), pinned by commit because a tag can move.
+          # latest: an empty ref, resolved below to the newest vX.Y.Z release tag (the one deliberately floating entry).
+          - speckit: minimum
+            ref: 9dca9bf42a031765ee5e5f2371137f2f26967e11
+          - speckit: latest
+            ref: ""
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          # Spec Kit needs Python 3.11 or later.
+          python-version: "3.13"
+      - name: Install
+        run: python -m pip install --quiet -e . pytest
+      - name: Resolve the Spec Kit ref
+        env:
+          REF: ${{ matrix.ref }}
+        run: |
+          set -euo pipefail
+          if [ -z "$REF" ]; then
+            REF=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/github/spec-kit | sed -n 's|.*refs/tags/\(v[0-9]*\.[0-9]*\.[0-9]*\)$|\1|p' | awk 'NR == 1')  # awk reads to the end: no SIGPIPE under pipefail
+          fi
+          if ! printf '%s' "$REF" | grep -Eqx '([0-9a-f]{40}|v[0-9]+\.[0-9]+\.[0-9]+)'; then
+            echo "::error::could not resolve a Spec Kit ref"
+            exit 1
+          fi
+          echo "SPECKIT_REF=$REF" >> "$GITHUB_ENV"
+      - name: Install the Spec Kit CLI
+        # In its own virtual environment: `specify` is never imported, only run, and cannot change the test environment.
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/speckit"
+          "$RUNNER_TEMP/speckit/bin/python" -m pip install --quiet "git+https://github.com/github/spec-kit.git@${SPECKIT_REF}"
+          "$RUNNER_TEMP/speckit/bin/specify" version
+          echo "SPECKIT_CONTRACT_SPECIFY=$RUNNER_TEMP/speckit/bin/specify" >> "$GITHUB_ENV"
+      - name: Run the contract tests
+        env:
+          SPECKIT_CONTRACT: "1"
+        run: |
+          set -euo pipefail
+          python -m pytest -q -rs tests/test_speckit_contract.py tests/test_workflow.py 2>&1 | tee "$RUNNER_TEMP/contract.log"
+      - name: Fail if any contract test was skipped
+        run: |
+          if grep -Eq '[0-9]+ skipped' "$RUNNER_TEMP/contract.log"; then
+            echo "::error::contract tests were skipped"
+            exit 1
+          fi
