@@ -117,7 +117,7 @@ def test_catalog_addresses_name_the_release_tag():
 def test_checksum_is_absent_or_real_and_points_at_a_release_file():
     """No release file exists yet, so there is no checksum; once there is one it must be a SHA-256 of a release file, never of the tag archive."""
     e = catalog("extensions.json")["extensions"]["ghp"]
-    assert "sha256" not in e or re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
+    assert re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
     assert "/releases/download/" in e["download_url"] and "/archive/" not in e["download_url"]
 
 
@@ -348,8 +348,8 @@ def test_what_is_not_known_yet_is_marked_and_nothing_is_invented():
         assert "TO CONFIRM" in details, heading
         assert "TO CONFIRM" in re.search(r"^\*\*Testing Details\*\*[^\n]*", _form(heading), re.M).group(0)
     assert "TO CONFIRM" in _form("2. Workflow submission")  # the end-to-end run has not happened
-    assert "sha256" not in catalog("extensions.json")["extensions"]["ghp"] and not re.search(r"\b[0-9a-f]{64}\b", t)
-    assert "add `sha256` once the release file exists" in t
+    assert catalog("extensions.json")["extensions"]["ghp"]["sha256"] == "13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837" and "\"sha256\": \"13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837\"" in t  # the line of SHA256SUMS
+    assert "add `sha256` once the release file exists" not in t
 
 
 @pytest.mark.parametrize("page", [DRAFT], ids=lambda p: p.name)
