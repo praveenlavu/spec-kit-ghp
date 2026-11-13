@@ -181,7 +181,7 @@ def test_draft_says_it_is_a_draft_and_nothing_is_published():
     assert "DRAFT" in "\n".join(t.splitlines()[:3])
     flat = " ".join(t.split())
     assert "Nothing is filed with Spec Kit" in flat and "whether to publish is the owner's decision" in flat.lower()
-    assert "the release `v0.1.0` exists" in flat.lower()
+    assert "the release `v0.1.1` exists" in flat.lower()
     assert "**Verified" not in t  # nothing in this draft is a verified result
     assert "not GitHub's automatic archive" in flat  # the address is a release file
     assert "installed by its id from a local catalog" in flat

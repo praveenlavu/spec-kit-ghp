@@ -1,8 +1,8 @@
 # Catalog submission (DRAFT)
 
 **DRAFT. Nothing is filed with Spec Kit.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
-Whether to publish is the owner's decision, and it has not been made. The release `v0.1.0` exists, and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.1; the same installs are re-run on the `v0.1.1` release after it exists.
-Boxes are ticked only for what was done against the published 0.1.0 release; every box left empty is a judgement for the person filing.
+Whether to publish is the owner's decision, and it has not been made. The release `v0.1.1` exists (the first release, `v0.1.0`, was published the day before), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.1.
+Boxes are ticked only for what was done against the published 0.1.1 release; every box left empty is a judgement for the person filing.
 
 **Two different numbers.** The catalog entry counts the extension's **slash commands**, from `extension.yml`: 13 commands (`speckit.ghp.*`) and 2 hooks. The `ghp` program is a separate thing with 21 commands of its own (`ghp --help`); those are not counted in any form.
 
@@ -86,20 +86,21 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 - [x] All command files exist and are properly formatted
 - [x] Extension ID follows naming conventions (lowercase-with-hyphens)
 
-**Testing Details** (from what was run against the 0.1.0 release on 2026-11-12; the same installs are re-run on 0.1.1 after its release)
+**Testing Details** (from what was run against the 0.1.1 release on 2026-11-13)
 
 ```markdown
 **Tested on:**
 - macOS (Darwin 27.2.0), with Spec Kit 1.2.1 (the minimum) and Spec Kit 1.4.0 (the newest release that day)
 
-**Test project:** a new empty folder where `specify init` ran, for each Spec Kit version; the live scenarios ran against a private test repository and a test Project owned by a user account
+**Test project:** a new empty folder where `specify init` ran, for each Spec Kit version; the live scenarios ran against a private and a public test repository, a public consumer test repository, and a test Project owned by a user account
 
 **Test scenarios:**
-1. Ran the ghp program from the v0.1.0 tag with uv (`ghp --version` printed 0.1.0); the pipx command was not run
+1. Installed the ghp program from the v0.1.1 tag with pip in a virtual environment (`ghp --version` printed 0.1.1); the uv and pipx commands were not run for 0.1.1
 2. Installed the extension from the download URL on both Spec Kit versions, and again by a pinned install from the catalog and through the bundle: 13 commands and 2 hooks shown by `specify extension list` each time
-3. Ran the ghp-lifecycle workflow on a test story, from the pull to an open pull request, with every GitHub write previewed, approved at a gate, then applied (terminal mode only)
-4. Ran ghp push with a plan that had gone stale and saw it refuse to write
-5. Ran the offline test suite inside the public export: 7255 passed, 120 skipped
+3. Ran the ghp-lifecycle workflow on Spec Kit 1.4.0 on a test story, from the pull to an open pull request, then `ghp done` after the merge, with every GitHub write previewed, approved at a gate, then applied (terminal mode); the gate answers were typed by an AI agent that had read each preview
+4. Ran ghp push with a plan that had gone stale and saw it refuse to write; on Spec Kit 1.2.1 ran the workflow up to the push approval, with a reject at the first gate and a stale plan at the push gate
+5. In comment mode on a public test repository, with the Actions bot as the agent: `ghp done` closed a story from an approval comment after `ghp approvals check`, and an edited, rejected, stale or same-account approval was refused
+6. Ran the live test suite against GitHub: 48 passed; ran the offline test suite inside the public export: 7307 passed, 120 skipped
 ```
 
 **Example Usage**
@@ -249,7 +250,7 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 The shell steps call the ghp program, which reaches GitHub through the GitHub CLI and its sign-in; the workflow README says so. Only the numeric issue number is put into a shell command, and each step checks it first.
 ```
 
-The end-to-end run was made once, in terminal mode only, on a private test repository, from a story to an open pull request; the gate answers were typed by an AI agent that had read each preview, so it is not a claim of independent human review. The lifecycle also installed from the raw workflow address and by a pinned catalog install on both Spec Kit versions.
+The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a private test repository, from a story to an open pull request and then `ghp done` after the merge; on 1.2.1 it ran only up to the push approval; the gate answers were typed by an AI agent that had read each preview, so it is not a claim of independent human review. The lifecycle also installed from the raw workflow address and by a pinned catalog install on both Spec Kit versions.
 
 ## 3. Bundle submission
 
@@ -311,7 +312,7 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 - [x] Bundle ID matches the manifest and follows naming conventions
 - [x] Every extension, preset, workflow, and step reference is pinned where the manifest requires a version
 
-**Testing Details** (from what was run against the 0.1.0 release on 2026-11-12; the same installs are re-run on 0.1.1 after its release)
+**Testing Details** (from what was run against the 0.1.1 release on 2026-11-13)
 
 ```markdown
 **Tested on:**
@@ -322,7 +323,7 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 **Test scenarios:**
 1. Added the two component catalogs, served from `main`
 2. Validated the bundle manifest (it validates only with those catalogs added to the project)
-3. Built the release file from a clean clone of the tag and compared it with the attached ghp-0.1.0.zip: identical
+3. Built the release file from a clean clone of the tag and compared it with the attached ghp-0.1.1.zip: identical
 4. Installed the bundle from the downloaded release file in a clean project
 5. Installed the bundle by its id from a local install-allowed bundle catalog (a `file://` address)
 6. Listed the installed extension: 13 commands and 2 hooks
@@ -381,7 +382,7 @@ specify workflow run ghp-lifecycle -i issue_number=42
 
 ## What happens when someone files them
 
-Step 1 was done for 0.1.0 and is repeated for 0.1.1 after its release; nothing has been filed. In order:
+Step 1 was done for 0.1.0 and again for 0.1.1; nothing has been filed. In order:
 
 1. The repository is public, the `v0.1.1` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
 2. The extension is filed through Spec Kit's extension submission issue form, with the values in section 1. Spec Kit's guide says not to edit the catalog file with a pull request for an extension.
@@ -393,9 +394,9 @@ Step 1 was done for 0.1.0 and is repeated for 0.1.1 after its release; nothing h
 
 - **The catalog format.** The entries and the form fields follow the catalog files, publishing guides and issue forms in a copy of Spec Kit's repository kept on the author's machine. They were not compared with the live repository, which may have changed since.
 - **How each entry is filed.** The issue-form route for extensions, the pull-request route for workflows and the issue-form route for bundles come from the same copy of the guides. They have not been checked against the live repository.
-- **The release file.** Checked on the 0.1.0 release: the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address and the two catalog addresses all answer, and the file matches its checksum. Not checked: the catalogs as served to someone who has them cached for a long time.
-- **Installing from the release.** `specify extension add` from the release file and `specify workflow add` from the raw workflow address were run with the 0.1.0 release on Spec Kit 1.2.1 and 1.4.0. `specify extension add --from` stops at a trust question when no one is at the terminal; it was answered yes.
-- **The bundle.** For 0.1.0: validated, built from a clean clone of the tag, installed from the release file and installed by its id from a local catalog, on both versions. Not checked: a bundle catalog served over the network (the local one used a `file://` address).
+- **The release file.** Checked on the 0.1.1 release: the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address and the two catalog addresses all answer, and the file matches its checksum. Not checked: the catalogs as served to someone who has them cached for a long time.
+- **Installing from the release.** `specify extension add` from the release file and `specify workflow add` from the raw workflow address were run with the 0.1.1 release on Spec Kit 1.2.1 and 1.4.0. `specify extension add --from` stops at a trust question when no one is at the terminal; it was answered yes.
+- **The bundle.** For 0.1.1: validated, built from a clean clone of the tag, installed from the release file and installed by its id from a local catalog, on both versions. Not checked: a bundle catalog served over the network (the local one used a `file://` address).
 - **The bundle file and its catalogs.** The two component catalogs are served from `main`, so a change there reaches installers without a new tag.
 - **Optional fields.** The entry has no category or effect. Some entries in the catalog have them, and the maintainers may add or ask for them.
 - **The bundle role.** The role text `developer` is a choice, copied from an example in Spec Kit's own catalog.
@@ -441,5 +442,5 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 - **A closer commit in a fork network.** Which repository GitHub reports for a closing commit that came from a fork.
 - **Fork and other-repository refusals of `ghp done`.** `ghp done` refuses a pull request named with `--pr` that comes from a fork or belongs to another repository, and a story closed by a commit of another repository; those refusals have not run against real GitHub.
 - **Board and strict checks on GitHub and Actions.** The board check and `strict check` on real GitHub and in Actions. `strict verify` ran once in Actions in another repository, on a pull request where it failed; a passing run in Actions has not been tried.
-- **The reusable workflows in a consumer repository.** The four ready-made workflows have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release commit, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the `GHP_PROJECT_TOKEN` secret. Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks (and their read-only token), a private consumer repository, and the re-run when a pull request's target branch is changed (the `edited` event).
-- **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The contract tests and the live lifecycle run used 1.2.4.dev0 only, so running the workflow on 1.2.1 or 1.4.0 has not been tried.
+- **The reusable workflows in a consumer repository.** The four ready-made workflows have run once in another repository on GitHub's hosted runners, pinned to the 0.1.1 release commit, by an AI agent on a public test repository: a passing gate, a failing gate (the log names the blocking rule, and the strict check still runs), a pull request whose own config file is ignored, a superseded run cancelled by the next push, and link-on-merge without the `GHP_PROJECT_TOKEN` secret. Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks (and their read-only token), a private consumer repository, and the re-run when a pull request's target branch is changed (the `edited` event).
+- **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The whole workflow ran to its end on 1.4.0 only; on 1.2.1 it ran up to the push approval (a reject and a stale plan were tried there), not to an open pull request.
