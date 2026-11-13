@@ -1,6 +1,6 @@
 # ghp bundle
 
-**Not published yet.** No release exists: the `v0.1.0` tag, the release files and the catalog addresses below do not exist until the owner makes the release. Nothing here has been installed from a release.
+**Released as `v0.1.0`.** The release files and the catalog addresses below exist. The bundle and its two parts were installed from the release on Spec Kit 1.2.1 and 1.4.0 (see [the catalog submission page](../docs/catalog-submission.md)). It is not yet listed in Spec Kit's own community catalogs.
 
 The bundle sets up a Spec Kit project to run GitHub issues through Spec Kit with a person's approval before every GitHub write. It is for a developer who keeps stories as GitHub issues and tracks them on a GitHub Project owned by their user account.
 

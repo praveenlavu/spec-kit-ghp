@@ -134,11 +134,11 @@ def test_bundle_pins_the_manifest_versions():
 
 
 def test_bundle_readme_pins_the_components_and_passes_the_lint():
-    """T51: the bundle page states the role, the two pinned parts, the install steps and that nothing is published; its values are the manifest's."""
+    """The bundle page states the role, the two pinned parts, the install steps and that the release exists; its values are the manifest's."""
     b, e = bundle(), catalog("extensions.json")["extensions"]["ghp"]
     t = _text(BUNDLE_README)
     flat = " ".join(t.split())
-    assert "Not published yet." in t and "No release exists" in flat
+    assert "Released as `v0.1.0`." in t and "Not published yet" not in flat and "No release exists" not in flat
     assert "for a %s" % b["bundle"]["role"] in flat
     for kind, part in (("Extension", b["provides"]["extensions"][0]), ("Workflow", b["provides"]["workflows"][0])):
         assert "| %s | `%s` | %s |" % (kind, part["id"], part["version"]) in t, kind
