@@ -44,7 +44,7 @@ ghp 0.1.1
 ```
 
 No `pipx`? Run `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1` instead.
-Both install the 0.1.1 release; the `v0.1.1` tag is created when 0.1.1 is released, and until then these lines do not work.
+Both install the 0.1.1 release.
 
 ## Step 3: Create `ghp.config.json`
 

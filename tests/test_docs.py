@@ -356,7 +356,7 @@ def test_the_honesty_lines_are_pinned():
     readme = _flat(_text(ROOT / "README.md"))
     for needle in ("| GitHub Actions workflows | Tested offline and run once in another repository; some cases not run yet (see below) |",
                    "Not run there yet: link-on-merge with the project token, a merge into a branch other than the default one, pull requests from forks, and a private repository.",
-                   "| A tagged release with its files | `v0.1.0` on GitHub: the extension file, the bundle file and their checksums | Released |",
+                   "| A tagged release with its files | `v0.1.1` on GitHub: the extension file, the bundle file and their checksums | Released |",
                    'Moving a card to "Done" on the board closes its issue', 'turn off "Auto-close issue" and "Item closed"',
                    "Organisation Projects are refused", "One exception you opt into: the [link-on-merge workflow]",
                    'F -- "all pass" --> R{"You approve opening the pull request"}', 'R --> M["You merge the pull request"]',

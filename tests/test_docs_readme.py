@@ -126,7 +126,7 @@ def test_install_is_pinned_to_the_release_tag(doc):
     assert "pipx install %s\n" % PIN in t and "python3 -m pip install --user %s`" % PIN in t
     # every install address of this repository names the tag
     assert all(a.endswith("@v0.1.1") for a in re.findall(r"git\+https://github\.com/praveenlavu/spec-kit-ghp(?:\.git)?\S*?(?=[`\s])", t))
-    assert "the `v0.1.1` tag is created when 0.1.1 is released" in flat(doc).replace("The `v0.1.1`", "the `v0.1.1`")
+    assert "tag is created when" not in flat(doc) and "until then these lines do not work" not in flat(doc)  # the tag exists since the release
 
 
 def test_readme_gives_the_bundle_route_as_the_bundle_page_does():
