@@ -103,7 +103,7 @@ $ echo $?
 
 ## Tested on real GitHub
 
-Not only unit tests. The release was run against real GitHub test repositories and a test Project, with fictional data, and the records are in [docs/evidence](docs/evidence).
+Not only unit tests. The release was run against real GitHub test repositories and a test Project, with fictional data, and the records are in [docs/evidence](https://github.com/praveenlavu/spec-kit-ghp/tree/main/docs/evidence).
 
 | What | Result |
 |---|---|

@@ -519,7 +519,7 @@ def test_the_lifecycle_workflow_is_described_as_shipped_and_how_far_it_is_proven
         assert "not shipped" not in flat(*rel) and "planned for this release" not in flat(*rel), rel
     for rel in (("README.md",), ("docs", "quickstart.md"), ("docs", "trust-and-limits.md"), ("AGENTS.md",)):
         assert not re.search(r"(?i)ghp-lifecycle[^.]{0,80}(planned|coming|not shipped)", flat(*rel)), rel
-    assert "comment mode and its poller have not run live yet" in flat("README.md")  # terminal mode ran live once (T34)
+    assert "Comment mode has run live with the Actions bot; its scheduled poller has not" in flat("README.md")  # terminal mode ran live once (T34)
 
 
 def test_every_applying_command_stops_on_an_unexpected_preview():

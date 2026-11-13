@@ -506,7 +506,7 @@ def test_readme_section_references_resolve_and_the_limits_are_stated():
     assert not re.search(r"\btask T\d", readme)  # T63: the shipped page names no internal task id
     assert {"Where approval is enforced", "Stopping, resuming and recovering"} <= set(re.findall(r"^## (.+)$", readme, re.M))
     top = " ".join((ROOT / "README.md").read_text(encoding="utf-8").split())
-    assert "It has run end to end against GitHub once, in terminal mode" in top and "comment mode and its poller have not run live yet" in top
+    assert "It has run end to end against GitHub on Spec Kit 1.4.0, in terminal mode" in top and "Comment mode has run live with the Actions bot; its scheduled poller has not" in top
     assert "has not been run end to end against GitHub yet" not in top
 
 
