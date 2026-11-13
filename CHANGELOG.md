@@ -36,7 +36,7 @@ Development:
 
 ## 0.1.0 (2026-11-12)
 
-The first release. It has not been tagged or published: see the [release checklist](docs/release-checklist.md).
+The first release, tagged `v0.1.0` and published on 2026-11-12. The steps are in the [release checklist](docs/release-checklist.md).
 
 Added:
 

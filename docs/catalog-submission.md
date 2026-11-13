@@ -409,8 +409,7 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 
 - **Two-person approval.** Approval was tested with one person and one bot, not with two people.
 - **A comment deleted by another writer.** Only a comment deleted by its own author was observed.
-- **The true size cap of a comment.** A 65,537-character comment was accepted; the real limit is unknown. `ghp` refuses comments above 60,000 characters.
-- **The unit of that cap.** Whether GitHub counts that limit in characters or in bytes.
+- **The exact size cap of a comment.** Comments of 65,537 and 100,000 characters were accepted, and one of 262,145 characters was refused (HTTP 422). Where the limit lies in between, and whether it counts characters or bytes, is unknown. `ghp` refuses comments above 60,000 characters.
 - **Token refresh and expiry.** Whether a `gh` sign-in token expires or refreshes on its own.
 - **Fine-grained tokens and user Projects.** Documented by GitHub as unsupported, never tried. `ghp doctor` shows their scopes as `unknown`.
 - **The scopes header of fine-grained tokens.** Whether GitHub tells a client which permissions a fine-grained token has.
@@ -434,10 +433,8 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 - **The write detector.** That `ghp`'s check for GraphQL writes reads every document the way GitHub does.
 - **Rare Markdown in issue text.** Setext headings, link reference definitions, HTML blocks, a comment directly before a heading on one line, and code fences inside list items.
 - **Look-alike characters.** Letters from other alphabets that look like ASCII are not detected; `ghp` compares exact ASCII.
-- **Edit counts after several edits.** GitHub's edit count after more than one edit.
 - **The comment join race.** A comment posted, changed or deleted between `ghp`'s two reads of the comment list is dropped, never counted.
 - **The newest 300 issues.** That the newest 300 issues always hold every task of an earlier push on a busy repository.
-- **Two pushes at once.** Two `ghp push` runs on the same story at the same time.
 - **Labels set by an issue template.** An issue template that adds the `ghp:task` label makes anyone's issue look like a task.
 - **The sub-issue summary in GraphQL.** The exact shape of GitHub's sub-issue counts.
 - **An open pull request in the closing references.** That GitHub lists an open pull request with `Closes #12` as a closing reference before it is merged.

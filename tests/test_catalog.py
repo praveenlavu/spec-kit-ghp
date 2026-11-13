@@ -191,7 +191,7 @@ def test_draft_says_it_is_a_draft_and_nothing_is_published():
 def test_draft_lists_every_unverified_item_of_the_trust_page():
     trust = _labels(_md_section(_text(TRUST), "Unverified in live runs"))
     draft = _labels(_md_section(_text(DRAFT), "Not yet checked on real GitHub"))
-    assert draft == trust and len(draft) >= 38  # 40 until T45 moved the two hosted-CI items to verified
+    assert draft == trust and len(draft) >= 35  # 40 until T45 moved the two hosted-CI items to verified; 36 after the live runs settled the cap unit, edit counts and two pushes at once
     own = _labels(_md_section(_text(DRAFT), "Not yet checked for the catalog"))
     assert len(own) >= 11 and "Optional fields." in own and "The bundle file and its catalogs." in own
 

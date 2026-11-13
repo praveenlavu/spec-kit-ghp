@@ -79,6 +79,19 @@ The CI check reads the process environment. It guards against a misconfigured jo
 - `unattended.assume_after_hours` cannot be used yet. `ghp` has no trusted server clock, so a sync that would need one refuses.
 - `ghp strict` prints these limits, in plain words, whenever the config says approval is `comment` (in the `notes` field of its output and as a `note:` line on the error stream).
 
+## Known limits seen in live runs
+
+These were seen on real GitHub with the released version. None of them lets a write happen without its approval.
+
+- **Two pushes at once.** Two `ghp push --apply` runs on the same story at the same instant created every task twice. A later push then refuses with `E_TASK_MARKER_AMBIGUOUS` and the duplicates need closing by hand. GitHub offers no way to make that step atomic, so run one push at a time. The ready-made workflows serialise their runs with `concurrency:`.
+- **The done approval covers counts, not wording.** The plan for `ghp done` is bound to the number of ticked boxes and to the merge commit, not to the text of section 3 of the ledger. A row added after the approval did not need a new approval. Read the ledger at the merge commit before you approve.
+- **`ghp pr create` preview and an open pull request.** When a pull request for the branch is already open, the preview says "push yes", but the apply pushes nothing.
+- **A workflow that opens a pull request** is refused by GitHub (HTTP 403) until the repository setting "Allow GitHub Actions to create and approve pull requests" is on. `ghp doctor` does not check that setting.
+- **`wait-po-validation` with no decisions.** The gate passes when no decisions were posted: there is nothing to validate.
+- **Organisation logins.** A `project_owner` that is an organisation, without `project_owner_type`, gets a generic GitHub error from `status` and `activate`, not `E_ORG_PROJECT_UNSUPPORTED`.
+- **Owner names with two hyphens in a row** are accepted by `ghp setup`, although GitHub does not allow them; the first GitHub read then fails.
+- **The set-aside count in a comment-mode refusal** also counts older commands for the same gate on that issue.
+
 ## Unverified in live runs
 
 This repository's own hosted CI has run. Its first run found one problem in the workflow linter (actionlint), since fixed; run 42861951070 then passed every job: Python 3.9, Python 3.13 and actionlint ([record](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/CI-RUN.md)).
@@ -88,8 +101,7 @@ Some items are technical; each one only matters if you rely on that exact behavi
 
 - **Two-person approval.** Approval was tested with one person and one bot, not with two people.
 - **A comment deleted by another writer.** Only a comment deleted by its own author was observed.
-- **The true size cap of a comment.** A 65,537-character comment was accepted; the real limit is unknown. `ghp` refuses comments above 60,000 characters.
-- **The unit of that cap.** Whether GitHub counts that limit in characters or in bytes.
+- **The exact size cap of a comment.** Comments of 65,537 and 100,000 characters were accepted, and one of 262,145 characters was refused (HTTP 422). Where the limit lies in between, and whether it counts characters or bytes, is unknown. `ghp` refuses comments above 60,000 characters.
 - **Token refresh and expiry.** Whether a `gh` sign-in token expires or refreshes on its own.
 - **Fine-grained tokens and user Projects.** Documented by GitHub as unsupported, never tried. `ghp doctor` shows their scopes as `unknown`.
 - **The scopes header of fine-grained tokens.** Whether GitHub tells a client which permissions a fine-grained token has.
@@ -113,10 +125,8 @@ Some items are technical; each one only matters if you rely on that exact behavi
 - **The write detector.** That `ghp`'s check for GraphQL writes reads every document the way GitHub does.
 - **Rare Markdown in issue text.** Setext headings, link reference definitions, HTML blocks, a comment directly before a heading on one line, and code fences inside list items.
 - **Look-alike characters.** Letters from other alphabets that look like ASCII are not detected; `ghp` compares exact ASCII.
-- **Edit counts after several edits.** GitHub's edit count after more than one edit.
 - **The comment join race.** A comment posted, changed or deleted between `ghp`'s two reads of the comment list is dropped, never counted.
 - **The newest 300 issues.** That the newest 300 issues always hold every task of an earlier push on a busy repository.
-- **Two pushes at once.** Two `ghp push` runs on the same story at the same time.
 - **Labels set by an issue template.** An issue template that adds the `ghp:task` label makes anyone's issue look like a task.
 - **The sub-issue summary in GraphQL.** The exact shape of GitHub's sub-issue counts.
 - **An open pull request in the closing references.** That GitHub lists an open pull request with `Closes #12` as a closing reference before it is merged.
