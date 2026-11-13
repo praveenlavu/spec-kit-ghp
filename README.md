@@ -302,7 +302,7 @@ The extension has been installed once with `specify extension add --dev` in an i
 
 The workflow ([workflows/ghp-lifecycle](https://github.com/praveenlavu/spec-kit-ghp/blob/main/workflows/ghp-lifecycle/README.md)) installs with `specify workflow add --dev`. Its approval steps are tested against the real Spec Kit engine, with a stand-in for `ghp`. It has run end to end against GitHub once, in terminal mode (records of the live runs: [docs/evidence](https://github.com/praveenlavu/spec-kit-ghp/tree/main/docs/evidence)); comment mode and its poller have not run live yet.
 
-The CI workflows ([CI on GitHub](docs/ci-github.md)) are tested here offline. They have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the project token. Not run there yet: link-on-merge with the project token, a merge into a branch other than the default one, pull requests from forks, and a private repository.
+The CI workflows ([CI on GitHub](docs/ci-github.md)) are tested here offline. They have run once in another repository on GitHub's hosted runners, pinned to the 0.1.1 release, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the project token. Not run there yet: link-on-merge with the project token, a merge into a branch other than the default one, pull requests from forks, and a private repository.
 
 Only GitHub Projects owned by a user account are supported in 0.1. Organisation Projects are refused.
 

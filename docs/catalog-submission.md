@@ -409,6 +409,7 @@ Step 1 was done for 0.1.0 and again for 0.1.1; nothing has been filed. In order:
 These are the same items as the "Unverified in live runs" list on the [trust page](trust-and-limits.md#unverified-in-live-runs). A catalog reader should see them before installing.
 
 - **Two-person approval.** Approval was tested with one person and one bot, not with two people.
+- **The scheduled poller.** `ghp approvals sync --resume` run on a schedule (see [unattended runs](unattended.md)) was not run live; the approval checks it relies on were.
 - **A comment deleted by another writer.** Only a comment deleted by its own author was observed.
 - **The exact size cap of a comment.** Comments of 65,537 and 100,000 characters were accepted, and one of 262,145 characters was refused (HTTP 422). Where the limit lies in between, and whether it counts characters or bytes, is unknown. `ghp` refuses comments above 60,000 characters.
 - **Token refresh and expiry.** Whether a `gh` sign-in token expires or refreshes on its own.

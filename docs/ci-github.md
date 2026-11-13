@@ -4,7 +4,7 @@ This repository ships four ready-made GitHub Actions workflows. Your repository 
 A workflow that another repository calls is a **reusable workflow**: you do not copy its steps, you point at it with one `uses:` line.
 
 > [!NOTE]
-> These workflows are tested here, offline, and have run once in another repository on GitHub's hosted runners (pinned to the 0.1.0 release, by an AI agent on a public test repository).
+> These workflows are tested here, offline, and have run once in another repository on GitHub's hosted runners (pinned to the 0.1.1 release, by an AI agent on a public test repository).
 > Not run there yet: link-on-merge with the `GHP_PROJECT_TOKEN` secret, a merge into a branch other than the default one, pull requests from forks, and a private repository.
 > Treat the first run in your repository as a test. See [Trust and limits](trust-and-limits.md#unverified-in-live-runs).
 

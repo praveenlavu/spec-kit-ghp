@@ -376,7 +376,7 @@ def test_the_honesty_lines_are_pinned():
     assert "have run once in another repository on GitHub's hosted runners" in ci and "have not yet run in another repository" not in ci
     assert "Not run there yet: link-on-merge with the `GHP_PROJECT_TOKEN` secret" in ci
     trust = _flat(_text(TRUST))
-    assert "have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release commit, by an AI agent" in trust
+    assert "have run once in another repository on GitHub's hosted runners, pinned to the 0.1.1 release commit, by an AI agent" in trust
     assert "Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks" in trust
     for needle in ("- **Strict mode and the board.** The strict checks in CI", "never read the Project board", "The board check runs only in `ghp strict check <n> --phase implement`",
                    "The workflow gives it no secret, but the code runs with full control of the runner",

@@ -1,6 +1,6 @@
 # ghp bundle
 
-**Released as `v0.1.1`.** The release files and the catalog addresses below exist. The 0.1.0 bundle and its two parts were installed from the 0.1.0 release on Spec Kit 1.2.1 and 1.4.0, and the same installs are re-run on 0.1.1 after its release (see [the catalog submission page](../docs/catalog-submission.md)). It is not yet listed in Spec Kit's own community catalogs.
+**Released as `v0.1.1`.** The release files and the catalog addresses below exist. The bundle and its two parts were installed from the 0.1.1 release on Spec Kit 1.2.1 and 1.4.0 (see [the catalog submission page](../docs/catalog-submission.md)). It is not yet listed in Spec Kit's own community catalogs.
 
 The bundle sets up a Spec Kit project to run GitHub issues through Spec Kit with a person's approval before every GitHub write. It is for a developer who keeps stories as GitHub issues and tracks them on a GitHub Project owned by their user account.
 
