@@ -61,7 +61,7 @@ def parse_section3(md):
         if not _AC_RE.match(cells[0]):
             continue
         rows.append({"ac": cells[0],
-                     "tests": [t.strip() for t in _cell(cells, 2).split(",") if t.strip()],
+                     "tests": [t.strip(" `") for t in _cell(cells, 2).split(",") if t.strip(" `")],  # `id` is Markdown code, as the template shows it
                      "evidence": _cell(cells, 3), "status": _cell(cells, 4)})
     return rows
 

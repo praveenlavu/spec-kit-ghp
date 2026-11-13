@@ -207,6 +207,10 @@ def test_stage_config(env):
     (env / "ghp.config.json").write_text("{not json")
     res = check(env, None, "config", "invalid")
     assert res["next"] == "ghp doctor" and res["problem"] == "config-invalid"
+    assert "E_ORG" not in res["why"]
+    (env / "ghp.config.json").write_text(json.dumps({"owner": "octo", "repo": "demo", "project_owner_type": "organization"}))
+    res = check(env, None, "config", "E_ORG_PROJECT_UNSUPPORTED")  # named like every other verb names it
+    assert res["problem"] == "config-invalid"
 
 
 def test_stage_ledger(env):
@@ -415,6 +419,9 @@ def test_pr_link_detected_from_a_linked_pull_request_of_this_repository(env):
 def test_stage_merged(env):
     world(env, merged=False)
     check(env, Hub(), "merged")
+    # the PR is still open: a fetch cannot help yet, the merge comes first (a person merges it)
+    check(env, Hub(linked=[pull(merged=False, oid=None)]), "merged", nxt="a person merges PR #40 on GitHub, then: git fetch origin")
+    check(env, None, "merged", offline=True)  # GitHub not read: the fetch, as before
     git(env, "symbolic-ref", "--delete", "refs/remotes/origin/HEAD")  # nothing to compare with: not met, never guessed
     check(env, Hub(), "merged", "origin/HEAD", nxt="git remote set-head origin --auto")
 
@@ -1092,7 +1099,8 @@ def test_an_open_issue_at_done_is_a_named_problem_first(env):
     world(env)
     hub = Hub(state="open", status="Done")
     res = check(env, hub, "open-at-done", nxt=OPEN_AT_DONE_NEXT)
-    assert res["why"] == ("the issue is open but its Project item is at Done: reopening an issue does not move its card, and ghp never moves a card out of Done")
+    assert res["why"] == ("the issue is open but its Project item is at Done: the card was moved to Done without closing the issue, or the issue was "
+                          "reopened (reopening does not move its card); ghp never moves a card out of Done")
     assert res["board_checked"] is True and res["problem"] is None
     assert hub.reads_only()
     # it comes before every other stage, however early that one is unmet

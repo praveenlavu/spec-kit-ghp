@@ -3,7 +3,7 @@ schema_version: "1.0"
 bundle:
   id: "ghp"
   name: "Spec Kit for GitHub Projects"
-  version: "0.1.0"
+  version: "0.1.1"
   role: "developer"
   description: "The ghp extension and the ghp-lifecycle workflow together: GitHub issue to Done through Spec Kit, with a human sign-off before every write."
   author: "praveenlavu"
@@ -19,10 +19,10 @@ requires:
 provides:
   extensions:
     - id: "ghp"
-      version: "0.1.0"
+      version: "0.1.1"
   workflows:
     - id: "ghp-lifecycle"
-      version: "0.1.0"
+      version: "0.1.1"
 
 tags:
   - "github-projects"

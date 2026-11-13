@@ -2,7 +2,7 @@ schema_version: "1.0"
 workflow:
   id: "ghp-lifecycle"
   name: "GitHub issue lifecycle"
-  version: "0.1.0"
+  version: "0.1.1"
   author: "praveenlavu"
   description: "GitHub story issue to an open PR: spec, plan, tasks, push, implement, gate, review, PR. Every GitHub write is preview, human gate, apply. The story closes after merge."
 
@@ -326,7 +326,7 @@ steps:
     command: "speckit.ghp.tasks"
     integration: "{{ inputs.integration }}"
     input:
-      args: "{{ inputs.issue_number }}"
+      args: "{{ inputs.issue_number }} --workflow"
 
   - id: "push-loop"
     type: "do-while"

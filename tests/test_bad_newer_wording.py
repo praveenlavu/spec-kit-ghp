@@ -94,3 +94,27 @@ def test_the_questions_sync_notice_uses_the_reason_wording(reason, tmp_path, mon
     assert cli.main(["questions", "7", "--sync"], gh=S.NoWriteGh()) == 0
     out = json.loads(capsys.readouterr().out)
     assert out["notice"] == ["Q1: %s: check the thread" % WORDS[reason].replace("newer", "later")] and out["bad_newer_by"]["Q1"] == {reason: 1}
+
+
+def test_the_refusal_says_why_an_approvers_approve_did_not_count(thread, tmp_path):
+    # the approver once posted a comment starting with the kit's marker: they are excluded on this issue, and the refusal says so
+    g, x = "approve-push", S.h("approve-push", b"plan")
+    thread.items = [S.C("[spec-kit-ghp:questions] copied by hand", 10), S.C("/approve %s %s" % (g, x), 11)]
+    with pytest.raises(approvals.ApprovalMissing) as e:
+        S.require(S.NoWriteGh(), repo=tmp_path)
+    text = str(e.value)
+    assert "1 /approve or /reject comment(s) for this plan's gates did not count" in text and "[spec-kit-ghp:" in text
+    assert "copied by hand" not in text  # counts and fixed words only, never comment text
+    thread.items = [S.C("/approve %s %s" % (g, x), 11, author=S.OTHER)]  # not an approver
+    with pytest.raises(approvals.ApprovalMissing) as e:
+        S.require(S.NoWriteGh(), repo=tmp_path)
+    assert "1 by an account that is not an approver" in str(e.value)
+    # a winning /approve read again past a newer malformed line: the set-aside command newer than it is counted once, not once per scan
+    thread.items = [S.C("/approve %s %s" % (g, x), 11), S.C("/approve %s %s" % (g, x), 12, author=S.OTHER), S.C("/approve %s nothash" % g, 13)]
+    with pytest.raises(approvals.ApprovalMissing) as e:
+        S.require(S.NoWriteGh(), repo=tmp_path)
+    assert "1 /approve or /reject comment(s) for this plan's gates did not count: 1 by an account" in str(e.value)
+    thread.items = []  # nothing there: nothing to explain
+    with pytest.raises(approvals.ApprovalMissing) as e:
+        S.require(S.NoWriteGh(), repo=tmp_path)
+    assert "did not count" not in str(e.value)

@@ -23,6 +23,11 @@ $ARGUMENTS
 Optional issue number, then any guidance for task breakdown. Find the issue number as described
 in `rules/routing.md`.
 
+`--workflow` (passed by the `ghp-lifecycle` workflow, installed separately with `specify workflow add`, run end to end once, in terminal mode only; not guidance): never stop to ask;
+nobody can reply until the next gate. The workflow runs the push preview and its gate next, so skip step 4: do not offer
+`speckit.ghp.push` or any optional hook the routed command offers, and run neither. With `--workflow`, end with a short summary, never a question or an offer:
+the task count, the list, and any items that could not be mapped.
+
 ## Steps
 
 ### 1. Route the tasks phase

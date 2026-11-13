@@ -8,20 +8,19 @@
       "name": "Spec Kit for GitHub Projects - human-gated lifecycle",
       "description": "GitHub issue to Done through Spec Kit, with a human sign-off before every write.",
       "author": "praveenlavu",
-      "version": "0.1.0",
-      "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/spec-kit-ghp-extension-0.1.0.zip",
-      "sha256": "13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837",
+      "version": "0.1.1",
+      "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip",
       "repository": "https://github.com/praveenlavu/spec-kit-ghp",
       "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
-      "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/README.md",
-      "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/CHANGELOG.md",
+      "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md",
+      "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md",
       "license": "MIT",
       "requires": {
         "speckit_version": ">=1.2.1",
         "tools": [
           {
             "name": "ghp",
-            "version": ">=0.1.0",
+            "version": ">=0.1.1",
             "required": true
           },
           {

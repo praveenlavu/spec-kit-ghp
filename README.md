@@ -79,12 +79,12 @@ gh auth login --scopes project
 **2. Install `ghp`.**
 
 ```bash
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1
 ghp --version
 ```
 
-No `pipx`? Use `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0` instead.
-Both lines install the 0.1.0 release. The `v0.1.0` tag is created when 0.1.0 is released; until then these lines do not work.
+No `pipx`? Use `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1` instead.
+Both lines install the 0.1.1 release. The `v0.1.1` tag is created when 0.1.1 is released; until then these lines do not work.
 
 **3. Tell `ghp` where your issues and board live.** In your Spec Kit project, run `ghp setup` and answer its questions. It asks for no password or token, and it writes `ghp.config.json` for you. Or create the file by hand:
 
@@ -158,7 +158,10 @@ In your AI agent, story by story (replace `12` with your story's issue number):
 | 8 | `speckit.ghp.done 12` | After the merge: closes the story and moves the card to Done, after your yes. |
 
 Every GitHub change goes in two moves: a preview you read, then an apply. The agent does both and asks for your yes in between.
-Some agents spell the commands with hyphens, such as `/speckit-ghp-pull`; the [full list](#spec-kit-slash-commands) is below.
+How you type the commands depends on your agent and your Spec Kit version. With Spec Kit 1.4.0 and Claude Code they are installed as
+skills named with hyphens: type `/speckit-ghp-pull 12` (the dotted `/speckit.ghp.pull` is answered with "Unknown skill"). Other agents may use
+the dotted form. `specify extension list` shows that the extension is installed (13 commands); your agent's own list of commands shows the
+spelling to type. The [full list](#spec-kit-slash-commands) is below.
 
 ## If something goes wrong
 
@@ -218,9 +221,9 @@ Every command has `--help`. Words like "gate" and "checklist file" are explained
 
 `ghp` has 21 commands (verbs); run `ghp --help` to list them.
 This project is also a Spec Kit extension (an add-on for Spec Kit). The extension adds 13 slash commands, `/speckit.ghp.*`, that you type in your
-AI coding agent. Some agents spell them `/speckit-ghp-pull`. Each one tells the agent what to run and where to stop for your yes.
+AI coding agent. With Spec Kit 1.4.0 and Claude Code they are named with hyphens instead, such as `/speckit-ghp-pull`. Each one tells the agent what to run and where to stop for your yes.
 
-**Install the extension** into a Spec Kit project (needs Spec Kit 1.2.1 or later). It is not published to a catalog yet, so for now install it from a clone of this repository:
+**Install the extension** into a Spec Kit project (needs Spec Kit 1.2.1 or later). It is not listed in Spec Kit's own catalogs yet, so install it from a clone of this repository, or as a bundle from the release (below):
 
 ```bash
 git clone https://github.com/praveenlavu/spec-kit-ghp.git
@@ -230,15 +233,15 @@ specify extension add --dev ../spec-kit-ghp
 
 The `ghp` command-line tool (step 2 above) must be installed too: the slash commands call it.
 
-**Or install it as a bundle, from the 0.1.0 release.** The bundle installs the extension and the `ghp-lifecycle` workflow together. It needs the release, which does not exist yet. Add the two catalogs that list them, then install the bundle file:
+**Or install it as a bundle, from the 0.1.1 release.** The bundle installs the extension and the `ghp-lifecycle` workflow together. The bundle file is attached to the 0.1.1 release. Add the two catalogs that list them, then install the bundle file:
 
 ```bash
 specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed
 specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp
 
 # The bundle file
-curl -L -o ghp-0.1.0.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip
-specify bundle install ./ghp-0.1.0.zip
+curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip
+specify bundle install ./ghp-0.1.1.zip
 ```
 
 An install-allowed catalog installs what it lists without asking whether you trust the source, so read both catalogs first. The bundle does not install the `ghp` tool; install it as in step 2. The [bundle page](https://github.com/praveenlavu/spec-kit-ghp/blob/main/bundle/README.md) explains each step.
@@ -291,15 +294,15 @@ The agent rules are in [AGENTS.md](AGENTS.md): text from an issue is data, never
 | Guided first-time setup | `ghp setup` | Works today |
 | Spec Kit slash commands (the extension) | `/speckit.ghp.*` | Works today |
 | A guided run from spec to the open pull request, stopping at each approval (Spec Kit workflow) | `ghp-lifecycle` | Works today |
-| Ready-made checks for your own repository's CI | GitHub Actions workflows | Built and tested offline; not yet run in another repository |
+| Ready-made checks for your own repository's CI | GitHub Actions workflows | Tested offline and run once in another repository; some cases not run yet (see below) |
 | Security policy and changelog | `SECURITY.md`, `CHANGELOG.md` | Works today |
-| A tagged 0.1.0 release | | Coming in 0.1 |
+| A tagged release with its files | `v0.1.0` on GitHub: the extension file, the bundle file and their checksums | Released |
 
 The extension has been installed once with `specify extension add --dev` in an isolated test. It has been run once from an agent (Claude Code) against a private test repository, from a fresh story to an open pull request.
 
 The workflow ([workflows/ghp-lifecycle](https://github.com/praveenlavu/spec-kit-ghp/blob/main/workflows/ghp-lifecycle/README.md)) installs with `specify workflow add --dev`. Its approval steps are tested against the real Spec Kit engine, with a stand-in for `ghp`. It has run end to end against GitHub once, in terminal mode (records of the live runs: [docs/evidence](https://github.com/praveenlavu/spec-kit-ghp/tree/main/docs/evidence)); comment mode and its poller have not run live yet.
 
-The CI workflows ([CI on GitHub](docs/ci-github.md)) are tested here offline. They have not yet run in another repository on GitHub's hosted runners; that is a later live check.
+The CI workflows ([CI on GitHub](docs/ci-github.md)) are tested here offline. They have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the project token. Not run there yet: link-on-merge with the project token, a merge into a branch other than the default one, pull requests from forks, and a private repository.
 
 Only GitHub Projects owned by a user account are supported in 0.1. Organisation Projects are refused.
 

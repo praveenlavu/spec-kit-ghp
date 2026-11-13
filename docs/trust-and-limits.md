@@ -47,7 +47,7 @@ In short: if a writer deletes comments before `ghp` reads them, `ghp` cannot tel
 - **Replacing a pin needs the old comments intact.** A pin is replaced when the text was revised, or after a `/reject` and a new `/approve` (run `ghp approvals sync` again). Before it replaces a pin, `ghp` checks that every comment the old pin recorded is still there and unchanged. If one is gone, nothing is pinned or approved until a person has read the thread and deleted `.ghp/approvals/<issue>.json` on purpose.
 - **Pins help, but they are not proof.** The pin file lives in your working tree. Whoever can write that file (the agent, or a pull request that commits `.ghp/`) can delete, edit or forge it. That removes the protection, just as deleting it does. For example, a pin written by hand from a live `/approve` satisfies `ghp done`. Pins only help against someone who can delete comments but cannot write your working tree. A deletion made before the sync or check is not seen either.
 - **A later edited or hidden comment blocks the step.** If an approver's comment that is newer than the approval is edited or hidden, the approval is refused, whatever the comment says now. Otherwise a writer could edit or hide an approver's later `/reject` and bring the earlier `/approve` back. So an approver who edits a later comment of their own blocks the step until they post a new command.
-- **Anyone who can comment can delay an approval.** A comment that looks like `ghp`'s approval request, or quotes a comment `ghp` posted, makes the step wait instead of approving it (delete that comment). An approval is checked once, before the first write: a `/reject` posted while a long apply runs is not seen by that apply.
+- **Anyone who can comment can delay an approval.** A comment that starts with `ghp`'s approval-request marker for the step and its plan (`[spec-kit-ghp:approval-request] <step> <hash>`), posted after the approval, makes the step wait instead of approving it (delete that comment, or approve again). Only a comment that starts with the marker counts: the marker later in a comment, or in a quoted (`>`) line, does not make the step wait. An approval is checked once, before the first write: a `/reject` posted while a long apply runs is not seen by that apply.
 
 ### Where the list of approvers comes from
 
@@ -67,7 +67,7 @@ The CI check reads the process environment. It guards against a misconfigured jo
 ### Which commands need an approval comment
 
 - Every `--apply` that writes to GitHub needs, in comment mode, an approver's `/approve <step> <hash>` comment for the exact plan being applied: `questions --post`, `decisions --post`, `push`, `activate`, `pr create` and `done`. `push --apply` always needs it, even when it has nothing to send. A changed plan has another hash, so it is not approved.
-- Closing a story (`ghp done --apply`) also needs a pinned approval of its plan.
+- Closing a story (`ghp done --apply`) also needs a pinned approval of its plan. Write the preview with `ghp done <n> --plan-out .ghp/plan-done.md`. After the approver's `/approve approve-done <hash>` comment for that plan, `ghp approvals check <n> --gate approve-done` pins it; then run the apply. The check pins only a comment that counts, by the rules above.
 - `ghp questions <n> --sync` and `ghp decisions <n> --sync` copy approvers' `/answer`, `/approve` and `/reject` comments into the checklist file and the decisions file. These are local files; nothing is written to GitHub. A line stays open when a newer approver line is malformed, edited or hidden (`bad-newer`), or when a newer comment that claims to be `ghp`'s decisions comment cannot be read (`posting-disguised`).
 - `ghp approvals sync <run>` reads a paused Spec Kit run, records the verdict for the step it waits at and, with `--resume`, resumes it. The account it runs as never counts as an approver.
 
@@ -105,7 +105,7 @@ Some items are technical; each one only matters if you rely on that exact behavi
 - **A write that fails with a server error.** Whether a write that GitHub answers with a server error may still have happened.
 - **A write that ends with a 1xx or 3xx status.** How such an answer to a write behaves.
 - **The automation's actor name.** That GitHub's board automation always shows as `github-project-automation` (seen, not documented).
-- **Automation delay at Done.** How long the board automation can take; `ghp done` waits up to 30 seconds.
+- **Automation delay at Done.** How long the board automation can take; `ghp done` waits about 30 seconds, plus the time of the reads (about 35 seconds in the live runs), for the board automation before it sets Done itself.
 - **Issue forms.** How GitHub's issue forms render the text `ghp` reads.
 - **Attachments.** Whether any API for file attachments exists (none was found).
 - **Bodies typed in the web editor.** How GitHub's web editor stores text you type or paste there.
@@ -122,6 +122,6 @@ Some items are technical; each one only matters if you rely on that exact behavi
 - **An open pull request in the closing references.** That GitHub lists an open pull request with `Closes #12` as a closing reference before it is merged.
 - **A closer commit in a fork network.** Which repository GitHub reports for a closing commit that came from a fork.
 - **Fork and other-repository refusals of `ghp done`.** `ghp done` refuses a pull request named with `--pr` that comes from a fork or belongs to another repository, and a story closed by a commit of another repository; those refusals have not run against real GitHub.
-- **Board and strict checks on GitHub and Actions.** The board check, `strict verify` and `strict check` on real GitHub and in Actions.
-- **The reusable workflows in a consumer repository.** The four ready-made workflows have not yet run in another repository on GitHub's hosted runners. Still unverified there: the read-only token of a pull request from a fork, the re-run when a pull request's target branch is changed (the `edited` event), and how the optional secret reaches the job.
-- **The Spec Kit minimum version.** Spec Kit 1.2.1, the oldest supported version, has not been tried. The contract tests ran against 1.2.4.dev0 only.
+- **Board and strict checks on GitHub and Actions.** The board check and `strict check` on real GitHub and in Actions. `strict verify` ran once in Actions in another repository, on a pull request where it failed; a passing run in Actions has not been tried.
+- **The reusable workflows in a consumer repository.** The four ready-made workflows have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release commit, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the `GHP_PROJECT_TOKEN` secret. Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks (and their read-only token), a private consumer repository, and the re-run when a pull request's target branch is changed (the `edited` event).
+- **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The contract tests and the live lifecycle run used 1.2.4.dev0 only, so running the workflow on 1.2.1 or 1.4.0 has not been tried.

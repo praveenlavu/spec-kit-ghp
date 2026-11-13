@@ -117,7 +117,15 @@ def test_without_a_terminal_and_without_flags_it_refuses_with_a_fixed_message(cw
         assert "--owner and --repo" in str(e.value)
     assert not (cwd / "ghp.config.json").exists() and gh.viewer_calls == 0
     assert main(["setup"], gh=Gh()) == 2  # under pytest stdin is not a terminal
-    assert capsys.readouterr().err.startswith("error: ghp setup asks questions and needs a terminal")
+    assert capsys.readouterr().err.startswith("error: E_TERMINAL: ghp setup asks questions and needs a terminal")
+
+
+def test_every_refusal_names_its_code_like_the_other_verbs(cwd, capsys):
+    codes = {k: v for k, v in vars(setup_cmd).items() if k.startswith("E_")}
+    assert codes and all(v.startswith(k + ": ") for k, v in codes.items())
+    (cwd / "ghp.config.json").write_text("{}")
+    assert main(["setup", "--owner", "acme", "--repo", "demo"], gh=Gh()) == 2
+    assert capsys.readouterr().err.startswith("error: E_EXISTS: ")
 
 
 def test_a_missing_or_signed_out_gh_stops_before_any_question(cwd, capsys):

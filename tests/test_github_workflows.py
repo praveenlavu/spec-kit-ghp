@@ -22,9 +22,9 @@ ROOT = Path(__file__).resolve().parent.parent
 WF = ROOT / ".github" / "workflows"
 GATE, GUARD, VERIFY, LINK = "ghp-gate", "ghp-branch-guard", "ghp-strict-verify", "ghp-link-on-merge"
 REUSABLE = [GATE, GUARD, VERIFY, LINK]
-CHECKOUT = "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
-SETUP_PYTHON = "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065"
-PINS = {CHECKOUT: "v4.2.2", SETUP_PYTHON: "v5.6.0"}
+CHECKOUT = "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09"
+SETUP_PYTHON = "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1"
+PINS = {CHECKOUT: "v5.1.0", SETUP_PYTHON: "v6.3.0"}
 SRC = ROOT / "src"
 
 
@@ -431,6 +431,17 @@ def test_a_blocking_gate_fails_and_its_summary_reaches_the_job_summary(tmp_path,
     assert "### ghp gate" in (tmp_path / "runner_temp" / "step_summary").read_text()
 
 
+def test_a_blocking_gate_names_its_rule_ids_in_the_log(tmp_path, git_env):
+    """The job summary is not readable through the API or signed out: the log line itself names the blocking rules (ids only)."""
+    repo = _pr_repo(tmp_path, ORG, None)
+    fake = make_bin(tmp_path, ghp='echo \'{"blocking": true, "blocked_by": ["ac_traceability", "ac-$(x)"], "detail": "SECRET"}\'; exit 1\n')
+    r, _ = run_step(tmp_path, step(GATE, "Run the gate"), {"STORY_ID": "1", "BASE_REF": "main"}, cwd=repo, bindir=fake)
+    assert r.returncode == 1 and "blocking rule ids: ac_traceability ac-x" in r.stdout and "SECRET" not in r.stdout
+    fake = make_bin(tmp_path, ghp='echo "error: refused" >&2; exit 2\n')  # no JSON: the line still fails and says so
+    r, _ = run_step(tmp_path, step(GATE, "Run the gate"), {"STORY_ID": "1", "BASE_REF": "main"}, cwd=repo, bindir=fake)
+    assert r.returncode == 1 and "blocking rule ids: none" in r.stdout
+
+
 def test_the_gate_and_the_strict_check_pass_cleanly(tmp_path, git_env):
     repo = _pr_repo(tmp_path, ORG, None)
     fake = make_bin(tmp_path, ghp='echo \'{"ok": true}\'; exit 0\n')
@@ -451,7 +462,9 @@ def test_the_strict_check_reports_rule_ids_only(tmp_path, git_env):
 
 def test_the_gate_runs_the_strict_check_only_under_strict():
     s = step(GATE, "Run the strict check")
-    assert s["if"] == "steps.story.outputs.id != '' && steps.mode.outputs.mode == 'strict'"
+    # !cancelled(): it runs even when the gate step failed, so a strict target shows both findings; the gate's failure still fails the job
+    assert s["if"] == "${{ !cancelled() && steps.story.outputs.id != '' && steps.mode.outputs.mode == 'strict' }}"
+    assert "it also runs `ghp strict check`, even when the gate fails" in (ROOT / "docs" / "ci-github.md").read_text(encoding="utf-8")
     assert step(GATE, "Run the gate")["if"] == "steps.story.outputs.id != ''"
     assert 'ghp strict check "$STORY_ID" --phase pr --head "$HEAD_SHA" --base "origin/${BASE_REF}"' in s["run"]
     v = step(VERIFY, "Re-run the recorded red and green commits")

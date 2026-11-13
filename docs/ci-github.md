@@ -4,14 +4,15 @@ This repository ships four ready-made GitHub Actions workflows. Your repository 
 A workflow that another repository calls is a **reusable workflow**: you do not copy its steps, you point at it with one `uses:` line.
 
 > [!NOTE]
-> These workflows are tested here, offline, but they have not yet run in another repository on GitHub's hosted runners.
+> These workflows are tested here, offline, and have run once in another repository on GitHub's hosted runners (pinned to the 0.1.0 release, by an AI agent on a public test repository).
+> Not run there yet: link-on-merge with the `GHP_PROJECT_TOKEN` secret, a merge into a branch other than the default one, pull requests from forks, and a private repository.
 > Treat the first run in your repository as a test. See [Trust and limits](trust-and-limits.md#unverified-in-live-runs).
 
 ## The four workflows
 
 | Workflow | When it runs | What it does |
 |---|---|---|
-| `ghp-gate.yml` | Each pull request | Finds the issue from the branch name and runs `ghp gate`. When the target branch is in strict mode, it also runs `ghp strict check`. The result goes to the job summary. |
+| `ghp-gate.yml` | Each pull request | Finds the issue from the branch name and runs `ghp gate`. When the target branch is in strict mode, it also runs `ghp strict check`, even when the gate fails, so both sets of findings show. The result goes to the job summary; when the gate fails, the job log also names the blocking rule ids. |
 | `ghp-branch-guard.yml` | Each pull request | Checks that the branch name names an issue (such as `feature/gh12-say-hello`) and that the issue exists. |
 | `ghp-strict-verify.yml` | Each pull request | Only in strict mode: runs your test command on the recorded commits, to show each test failed before the fix and passes after it. Otherwise it does nothing. |
 | `ghp-link-on-merge.yml` | When a pull request is merged | Comments `Merged in #<pr>` on each issue the pull request closes, and closes any that are still open. With `close-story: true` it also runs `ghp done --apply`. |
@@ -104,6 +105,17 @@ Never paste the token anywhere else: not in a file, a comment, an issue, a chat 
 
 Without the secret, the link job still comments and closes issues, and says the board was not moved.
 
+### `close-story: true` with approval by comment
+
+With `"approval": "comment"` on the default branch, keep `close-story: false`. With `true`, every run fails and the issue stays open.
+
+Here is why. `ghp done --apply` closes a story only when an approver's approval of its plan is pinned (see [Trust and limits](trust-and-limits.md#which-commands-need-an-approval-comment)). The link job starts from a fresh checkout that holds no pin. It posts its `Merged in #<pr>` comment, leaves the closing to `ghp done`, and `ghp done` then refuses and writes nothing. The issue stays open, without its ledger comment and without the board move. Finish the story on your own machine:
+
+1. `ghp done <n> --plan-out .ghp/plan-done.md` writes the preview. Read it.
+2. `ghp approvals check <n> --gate approve-done` exits 2 and shows the `/approve approve-done <hash>` line for that plan. An approver posts that line as a comment on the story. The approver must be a different account from the one `ghp` runs as (the one `gh` is signed in with): a comment by that account never counts.
+3. `ghp approvals check <n> --gate approve-done` again: it pins the approver's comment.
+4. `ghp done <n> --apply --expect-plan .ghp/plan-done.md` closes the story.
+
 ## Who may approve, in CI
 
 `ghp` reads who may approve from the target branch through `origin/HEAD`, which `actions/checkout` does not create. The ready-made workflows check out the full history (`fetch-depth: 0`) and run `git remote set-head origin <default branch>` for you.
@@ -137,6 +149,7 @@ The workflows fail the job on any code other than `0`. In a strict repository, `
 - **A private copy of this repository.** The workflows install `ghp` with `pip` from `github.com/praveenlavu/spec-kit-ghp`. That repository must be readable by your runner, which today means public; there is no token input for the install in this version.
 - **Strict mode and the board.** The strict checks in CI (`ghp strict check --phase pr` and `ghp strict verify`) never read the Project board, so the Actions token's blindness to user Projects does not affect them. The board check runs only in `ghp strict check <n> --phase implement`, which a person runs on their own machine.
 - **Running your tests on pull request code.** `ghp-strict-verify.yml` runs your project's test command on the pull request's code. The workflow gives it no secret, but the code runs with full control of the runner: it can read the job's read-only token from memory and use the network. Require approval for pull requests from outside contributors (a repository setting) and use GitHub-hosted runners, which are thrown away after each job.
+- **Opening a pull request from your own workflow.** The ready-made workflows never open a pull request. If your own workflow runs `ghp pr create --apply` with the Actions token (`GITHUB_TOKEN`), for example with a bot as the agent, GitHub answers HTTP 403 ("GitHub Actions is not permitted to create or approve pull requests") unless the repository setting "Allow GitHub Actions to create and approve pull requests" is on (Settings, then Actions, then General, under Workflow permissions). It is off by default. `ghp` checks the approval first, makes the one call, reports the 403 with exit code 1 and does not retry. Turning the setting on is the repository owner's decision: it lets every workflow in the repository create and approve pull requests.
 - **Branch names.** Branch names may use letters, digits, `.`, `_`, `/` and `-` (and `#` in the pull request's branch), and no `..`. Anything else fails the job.
 - **Package install.** While installing `ghp`, `pip` fetches its build tool (`setuptools`) from PyPI without a fixed version or hash check.
 - **Secrets and pull requests from the same repository.** GitHub gives repository secrets to a pull request whose branch is in the same repository, and the job runs that pull request's own code. This repository's own CI passes the optional `SCRUB_DENYLIST` secret (the private word list of the leaked-names check) to a step that runs a script from the pull request's checkout, so anyone who can push a branch here could print the list. Set that secret only in a repository whose contributors are all trusted with it. A pull request from a fork gets no secret.

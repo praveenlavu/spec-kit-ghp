@@ -29,7 +29,7 @@ Run each and report a short table (tool, found version, required/optional):
 
 - `python3 --version` — required.
 - `ghp --version` — required. Missing → tell the user to install it
-  (`pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0`) and stop.
+  (`pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1`) and stop.
 - `git --version` — required. Missing → stop.
 - `gh --version` — required: `ghp` asks `gh` to make every GitHub call.
 

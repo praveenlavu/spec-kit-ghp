@@ -9,7 +9,7 @@ What `ghp` needs, and what it has actually been tried on. A version listed as "t
 | Python | 3.9 or later. Only the standard library: `ghp` installs nothing else. | 3.9.6 on macOS (the full test suite). The hosted CI runs 3.9 and 3.13; both passed in hosted run 42861951070. |
 | git | Any recent version. | The version on the author's macOS machine. |
 | GitHub CLI (`gh`) | Signed in with `gh auth login`. `ghp` sends every GitHub call through it. | `gh` 2.96.0 on the author's machine, where the live runs ran (the run records do not name the version). |
-| Spec Kit (`specify`) | 1.2.1 or later, for the extension and the workflow. | 1.2.4.dev0 only. The minimum, 1.2.1, has not been tried. |
+| Spec Kit (`specify`) | 1.2.1 or later, for the extension and the workflow. | The installs (the extension, the workflow and the bundle) on 1.2.1 and 1.4.0. The workflow runs and the contract tests on 1.2.4.dev0 only. |
 
 ## GitHub features used
 

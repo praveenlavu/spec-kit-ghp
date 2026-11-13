@@ -158,5 +158,8 @@ def run(args, gh):
     title = args.title if args.title is not None else title_from_ledger(cfg, ref.number)
     p = plan(ref.number, title, cfg.branch_prefix)
     out = apply(p) if args.apply else {**p, "applied": False}
+    if not args.apply and not title and p["action"] in ("create", "rename"):  # the fallback slug: a spec must not record this name as the branch
+        out.update(final=False, note="not the final name: there is no ledger title yet, so the slug is the fallback 'issue'; after `ghp dod %d` "
+                                     "this names the branch from the issue title" % ref.number)
     print(json.dumps(out))
     return 0

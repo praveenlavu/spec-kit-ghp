@@ -54,7 +54,7 @@ import sys
 import urllib.parse
 
 from . import approvals, comments, decisions, dod, gate, issues, plan as write_gate, prs, projects, strict
-from .config import Config, ConfigError, ConfigInvalid
+from .config import Config, ConfigError, ConfigInvalid, _blob_at
 from .gh import GhError, scrub
 from .refs import _MAX as MAX_ID
 
@@ -323,18 +323,39 @@ def _link(cfg, number, merge):
         "DoD_%d.md" % number, url, merge["oid"][:12], "" if merge["pr"] is None else " (PR #%d)" % merge["pr"])
 
 
-def summary(cfg, number, chk):
+def _counts(chk):
+    return chk["acs"], chk["boxes"] - len(chk["unticked"]), chk["boxes"]
+
+
+def summary(cfg, number, chk, at_merge=None):
     """The ledger counts, from the SAME `check` result the gate used (one reading of the checklist: the comment cannot say 0 of 0 where the gate saw
-    ready). No ledger text is copied."""
+    ready). No ledger text is copied. `at_merge` (`ledger_at_merge`): when the linked file does not hold these counts the summary says so, so the
+    comment never vouches for ticks its own link does not show."""
     shown = comments._MENTION.sub(comments.NO_MENTION, comments._show(dod.dod_file(dod.safe_dir(cfg.dod_path), number), 200))
-    return "**Ledger summary** (%s): %d acceptance criteria; DoD checklist %d of %d ticked." % (
-        shown, chk["acs"], chk["boxes"] - len(chk["unticked"]), chk["boxes"])
+    text = "**Ledger summary** (%s): %d acceptance criteria; DoD checklist %d of %d ticked." % ((shown,) + _counts(chk))
+    if at_merge == "missing":
+        text += " The linked merge commit does not hold this file: the ticks counted here are not in it."
+    elif isinstance(at_merge, dict) and _counts(at_merge)[1:] != _counts(chk)[1:]:  # only the boxes the sentence names
+        text += " The linked file at the merge commit has %d of %d ticked: the ticks counted here are not in it." % _counts(at_merge)[1:]
+    return text
 
 
-def comment_text(cfg, number, merge, closed_by, chk):
+def ledger_at_merge(cfg, number, merge):
+    """`check` of the ledger in the merge commit the comment links (what a reader can verify), "missing" when that commit has no such file, or
+    None when it cannot be read here (no merge commit, not a git checkout, the commit not fetched, an unreadable file)."""
+    if merge is None or merge["oid"] is None:
+        return None
+    try:
+        raw = _blob_at(".", merge["oid"], dod.dod_file(dod.safe_dir(cfg.dod_path), number).as_posix(), gate.MAX_READ, "ledger at the merge commit")
+        return "missing" if raw is None else check(raw.decode("utf-8"))
+    except (ConfigInvalid, ValueError):  # UnicodeDecodeError and dod.LedgerError are ValueErrors
+        return None
+
+
+def comment_text(cfg, number, merge, closed_by, chk, at_merge=None):
     """The ledger comment: counts from the ledger (no ledger text), a link to the file at the merge commit, the hidden marker. No @mention can
     survive in it: the one user-controlled part, the ledger path, is shown escaped, percent-encoded in the link, and the whole is defanged."""
-    lines = ["**DoD complete for #%d.**" % number, summary(cfg, number, chk), _link(cfg, number, merge)]
+    lines = ["**DoD complete for #%d.**" % number, summary(cfg, number, chk, at_merge), _link(cfg, number, merge)]
     if closed_by is not None:
         lines.append("**Closed by:** " + closed_by)
     text = comments._MENTION.sub(comments.NO_MENTION, "\n\n".join(lines)) + "\n\n" + MARKER % number
@@ -366,10 +387,11 @@ def plan_done(gh, cfg, issue, chk, pr=None):
     merge, how = merge_of(cfg, issue, f, given)
     closed = issue.state == "closed"
     comment_id, dropped = find_ledger_comment(gh, ref)
+    at_merge = ledger_at_merge(cfg, ref.number, merge)
     closer_pr = f["closer"].get("pr") if closed else None  # an open issue may carry the event of an earlier close
     linked = given is not None and any(x["number"] == pr and _own(cfg, x) for x in f["linked"] + ([closer_pr] if closer_pr else []))
     p = {"issue": issue, "chk": chk, "merge": merge, "how": how if closed else None, "closed": closed, "subs": f["subs"], "dropped": dropped,
-         "comment": comment_text(cfg, ref.number, merge, how if closed else None, chk), "comment_id": comment_id,
+         "comment": comment_text(cfg, ref.number, merge, how if closed else None, chk, at_merge), "comment_id": comment_id, "at_merge": at_merge,
          "board": None, "item_id": None, "current": None, "to": cfg.status_done, "to_id": None, "project_id": None, "status": "no-project", "warned": [],
          "given": None if given is None else [pr, linked, given["title"], given["at"], given["login"], given["author_id"]]}
     if cfg.project_number is not None:
@@ -389,7 +411,7 @@ def _digest(p):
     """SHA-256 of the exact data behind the plan (not its rendering), so --expect-plan covers it even where a display is lossy."""
     i = p["issue"]
     row = [i.ref.number, i.id, i.node_id, i.title, i.state, i.state_reason, p["chk"], p["merge"], p["how"], p["comment"], p["comment_id"], p["subs"],
-           p["dropped"], p["item_id"], p["current"], p["to"], p["to_id"], p["project_id"], p["status"], p["warned"], p["given"]]
+           p["dropped"], p["item_id"], p["current"], p["to"], p["to_id"], p["project_id"], p["status"], p["warned"], p["given"], p.get("at_merge")]
     return hashlib.sha256(json.dumps(row, ensure_ascii=True).encode("ascii")).hexdigest()
 
 
@@ -432,6 +454,17 @@ def render_plan(p):
     lines.append("Status: %s -> %s" % (now, to) if p["status"] == "set" else "Status: %s" % now)
     if p["comment_id"] is None:
         lines += ["", "Ledger comment:"] + ["> " + _cell(x) if x else ">" for x in p["comment"].split("\n")]
+    at = p["at_merge"]
+    if m is not None and m["oid"] is not None and p["comment_id"] is None:  # what a reader of the link will see, shown before the yes
+        if at is None:
+            lines += ["", "warning: the ledger at merge commit %s could not be read here (run git fetch origin), so ghp could not check that the "
+                      "linked file holds the ticks counted above" % m["oid"][:12]]
+        elif at == "missing":
+            lines += ["", "warning: merge commit %s has no ledger file: the comment links a file that is not there, and says so" % m["oid"][:12]]
+        elif _counts(at)[1:] != _counts(p["chk"])[1:]:
+            lines += ["", "warning: the ledger at merge commit %s has %d of %d boxes ticked, not the %d of %d counted here from the working tree; the "
+                      "comment says so. For the linked file to show them, tick section 5 on the PR branch before the merge"
+                      % ((m["oid"][:12],) + _counts(at)[1:] + _counts(p["chk"])[1:])]
     for name in p["warned"]:
         lines += ["", WORKFLOW_WARNING % _cell(name)]
     if p["subs"][0] > p["subs"][1]:

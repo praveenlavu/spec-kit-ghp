@@ -251,6 +251,11 @@ def _problem(e, net):
         return "unknown", OFFLINE + ": GitHub gave no answer (no network, or gh is not signed in: run `gh auth login` yourself)"
     if isinstance(e, RateLimited):
         return "unknown", "GitHub's rate limit is reached: run `ghp doctor` again later"
+    if e.code == "E_GH_GRAPHQL":  # an error inside an HTTP 200 answer: the status says nothing
+        if any(t == "NOT_FOUND" for t, _ in e.graphql_errors):
+            return "unknown", ("GitHub found no such Project or repository for this sign-in: it does not exist, or this sign-in cannot see it "
+                               "(check project_owner, project_number and the sign-in)")
+        return "unknown", "GitHub answered the query with an error"
     if isinstance(e.status, int):
         return "unknown", f"GitHub answered HTTP {e.status} (unexpected)"
     return "unknown", "GitHub gave no usable answer"

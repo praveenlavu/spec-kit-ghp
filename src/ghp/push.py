@@ -37,7 +37,7 @@ from . import approvals, comments, gate, issues, plan as write_gate, projects
 from .config import Config
 from .dod import dod_file, ledger_spec_dir, safe_dir
 from .gh import GhError
-from .tasks import parse_tasks
+from .tasks import not_tasks, parse_tasks
 
 MAX_TASKS = 100  # GitHub's limit of sub-issues under one parent
 MAX_TITLE = issues.MAX_TITLE
@@ -231,7 +231,7 @@ def label_missing(gh, cfg, ops):
     return False
 
 
-def render_plan(story, ops, board, todo="Todo", label_missing=False):
+def render_plan(story, ops, board, todo="Todo", label_missing=False, skipped=()):
     """Counts, then every row that writes or needs a look, then the unchanged ids on one line (the gate shows 190 lines)."""
     counts = {a: sum(o["action"] == a for o in ops) for a in ("create", "update", "unchanged", "orphan")}
     lines = ["# Plan: push tasks to #%d as sub-issues" % story.ref.number, " · ".join("%s %d" % kv for kv in counts.items()), ""]
@@ -241,6 +241,10 @@ def render_plan(story, ops, board, todo="Todo", label_missing=False):
                  else "Project: no Project is configured; no Project items are added")
     if label_missing:
         lines += ["\u26a0 label %s does not exist; GitHub creates it only when the token has push access" % LABEL, ""]
+    for i, line in skipped[:20]:  # `skipped`: tasks.not_tasks of tasks.md; nothing is planned for them
+        lines += ["⚠ tasks.md line %d is not read as a task (a task is `- [ ] T` and 3 to 9 digits, then a space): %s" % (i, _cell(line[:200]))]
+    if len(skipped) > 20:
+        lines += ["⚠ ... and %d more such lines" % (len(skipped) - 20)]
     lines += ["", "| action | task | title | issue | sub-issue | project item |", "|---|---|---|---|---|---|"]
     for o in ops:
         if o["action"] == "unchanged":
@@ -360,12 +364,21 @@ def _tasks_md(cfg, ref, source):
 def run(args, gh):
     ref = issues._resolve(args.ref)  # config, then the ref: a bad one is refused before any call
     cfg = Config.load()
-    tasks = parse_tasks(_tasks_md(cfg, ref, args.source))
+    try:
+        md = _tasks_md(cfg, ref, args.source)
+    except ValueError:
+        if args.source is None:  # no ledger: a pull request number is named as one, not sent to `ghp dod` (which would then refuse it)
+            try:
+                issues.get(gh, ref)  # NotAnIssue (E_NOT_AN_ISSUE) for a pull request
+            except GhError:
+                pass  # unreadable: the ledger refusal stands
+        raise
+    tasks = parse_tasks(md)
     _check_tasks(tasks)  # too many or bad tasks: refused before the first call
     story = issues.get(gh, ref)  # NotAnIssue is a ValueError: exit 2
     board = None if cfg.project_number is None else projects.discover(gh, cfg)  # one that is set but unreadable refuses here
     ops = plan_push(gh, cfg, story, tasks, board)
-    text = render_plan(story, ops, board, cfg.status_todo, label_missing(gh, cfg, ops))
+    text = render_plan(story, ops, board, cfg.status_todo, label_missing(gh, cfg, ops), not_tasks(md))
     write_gate.arm_or_refuse(args, gh, text, approvals.approve_hook(gh, ref, "push", text))
     print(text)
     if not args.apply:

@@ -9,6 +9,8 @@ branch it pushed. Merged commits stay on `main` (files under `t26/<stamp>/`); th
 Findings are collected in RECORD and dumped to $GHP_T26_RECORD (a path) for docs/evidence/T26.md. Every wait is bounded (<= 60 s).
 T26f (docs/evidence/T26f.md) adds `done --pr N` live: AC5 below, a default-branch merge, and the --pr refusals; every `done` write there goes
 a dry run with --plan-out, then --expect-plan --apply (`done_gated`); `pr create` uses the same two steps.
+The Project's two closing switches ("Auto-close issue", "Item closed") are read once at the start and never changed (UI only);
+each test whose result depends on them says in its docstring what it expects in each state.
 """
 import json
 import os
@@ -68,6 +70,7 @@ def world(gh, tmp_path_factory):
         OWNER, REPO, OWNER, PROJECT))  # untracked: never committed to the scratch repo
     w.cfg = Config.load(str(w.clone))
     w.board = projects.discover(w.ag, w.cfg)
+    w.switches = RECORD["switches"] = closing_switches(w.ag, w.cfg)  # read once at the start; each test expects what this state does
     try:
         yield w
     finally:
@@ -257,6 +260,21 @@ def done_writes(log):
     return [c[2] for c in log.writes]
 
 
+def closing_switches(gh, cfg):
+    """The Project's two closing switches, read the way `ghp project show` reads them (the tests never toggle them; UI only).
+    "Auto-close issue": a card set to Done closes its issue. "Item closed": closing an issue moves its card to Done."""
+    flows = {x.name: x.enabled for x in projects.workflows(gh, cfg)}
+    missing = [name for name in done.CLOSING_WORKFLOWS if name not in flows]
+    assert not missing, "the Project has no %s workflow: the expected behaviour cannot be chosen" % missing
+    return {"auto_close": flows["Auto-close issue"], "item_closed": flows["Item closed"]}
+
+
+def after_merge_writes(full, n, item_closed):
+    """What `ghp done` sends for a story a default-branch merge already closed: the ledger comment, and the Status edit to
+    Done only when "Item closed" is off (then nothing else moves the card, so done sets Done itself after its wait)."""
+    return ["POST repos/%s/issues/%d/comments" % (full, n)] + ([] if item_closed else ["graphql mutation updateProjectV2ItemFieldValue"])
+
+
 def done_gated(w, capsys, n, *extra):
     """`ghp done` the repository's way: a dry run with --plan-out (0 writes), then --expect-plan on that file with --apply. (code, plan, out, err, writes)."""
     approved = w.root / ("done-plan-%d-%d.md" % (n, len(RECORD.setdefault("done_gated", []))))
@@ -273,6 +291,8 @@ def marked(w, n):
 
 # ---- AC1: branch, pr create, merge by the owner, closed by the PR, item Done ----
 def test_ac1_branch_pr_create_merge_closes_with_closer_pull_request_and_item_done(world, capsys):
+    """Both switch states. The merged PR's `Closes #N` closes the story either way. "Item closed" on: the card reaches Done
+    by itself. "Item closed" off: the card stays where it was (AC2's `ghp done` then sets Done)."""
     w = world
     issue, item = new_issue(w, "T26 live story A: pickup slots", STORY_BODY, board=True)
     n = w.a = issue.ref.number
@@ -292,14 +312,18 @@ def test_ac1_branch_pr_create_merge_closes_with_closer_pull_request_and_item_don
     assert ev["closer"]["__typename"] == "PullRequest" and ev["closer"]["number"] == pr and ev["closer"]["merged"] is True
     f = done.facts(w.ag, issues.get(w.ag, issue.ref))
     assert f["closer"]["kind"] == "pr" and f["closer"]["pr"]["number"] == pr
-    at_done, secs = poll(lambda: (status(w, item) or ("", ""))[0] == "Done")
+    on = w.switches["item_closed"]
+    at_done, secs = poll(lambda: (status(w, item) or ("", ""))[0] == "Done", timeout=WAIT if on else NEGATIVE_WAIT)
     RECORD["ac1"]["item_done_after_close_s"] = secs
     RECORD["ac1"]["status_events"] = [[e.from_, e.to, e.actor_login] for e in projects.status_events(w.ag, issue.node_id)]
-    assert at_done, "the item of #%d is not at Done %d s after the close" % (n, WAIT)
+    assert bool(at_done) == on, "Item closed is %s, but the item of #%d is %sat Done after the close" % (
+        "on" if on else "off", n, "" if at_done else "not ")
 
 
 # ---- AC2: done after the merge: one ledger comment, byte-exact marker, idempotent ----
 def test_ac2_done_after_the_merge_posts_the_ledger_comment_once(world, capsys):
+    """Both switch states. "Item closed" on: `done` posts only the ledger comment (the card is already at Done). "Item closed"
+    off: `done` posts the comment and sets Done itself after its wait. Never a second close."""
     w, n = world, world.a
     code, plan, err, log = run(capsys, "done", str(n))
     assert code == 0 and log.writes == [] and "Step 1: post the ledger comment" in plan, (plan, err)
@@ -310,8 +334,10 @@ def test_ac2_done_after_the_merge_posts_the_ledger_comment_once(world, capsys):
     expected = done.plan_done(Gh(), w.cfg, issue, chk)["comment"]  # what the apply will post (reads only)
     code, out, err, log = run(capsys, "done", str(n), "--apply", gh=logged_gh())
     assert code == 0 and "posted the ledger comment" in out and "closed #" not in out, (out, err)
-    assert done_writes(log) == ["POST repos/%s/issues/%d/comments" % (FULL, n)], log.writes
-    marked = [c for c in w.ag.rest("GET", "%s/issues/%d/comments?per_page=100" % (REPO_PATH, n)) if done.MARKER % n in c["body"]]
+    assert done_writes(log) == after_merge_writes(FULL, n, w.switches["item_closed"]), log.writes
+    assert w.switches["item_closed"] or "Status is Done (set by ghp)" in out, out
+    assert status(w, w.a_item)[0] == "Done"
+    marked =[c for c in w.ag.rest("GET", "%s/issues/%d/comments?per_page=100" % (REPO_PATH, n)) if done.MARKER % n in c["body"]]
     assert len(marked) == 1
     body = marked[0]["body"]
     RECORD["ac2"] = {"comment_id": marked[0]["id"], "byte_exact": body == expected, "ends_with_marker": body.endswith(done.MARKER % n),
@@ -357,16 +383,20 @@ def test_ac3_done_closes_an_open_story_and_the_item_reaches_done(world, capsys):
 
 # ---- AC4: a board drag to Done closes the issue without the gate ----
 def test_ac4_board_drag_to_done_closes_the_story_without_the_gate(world):
+    """Both switch states. "Auto-close issue" on: a card set to Done closes its issue with no gate. "Auto-close issue" off:
+    the issue stays open (watched for NEGATIVE_WAIT s); only `ghp done` closes it."""
     w = world
+    on = w.switches["auto_close"]
     issue, item = new_issue(w, "T26 live story D: board drag", STORY_BODY, board=True)
     n = issue.ref.number
     before = status(w, item)
     set_status_raw(w, item, "Done")
-    closed, secs = poll(lambda: state(w, n)[0] == "closed")
+    closed, secs = poll(lambda: state(w, n)[0] == "closed", timeout=WAIT if on else NEGATIVE_WAIT)
     RECORD["ac4"] = {"issue": n, "item": item, "status_before": before, "closed": bool(closed), "closed_after_s": secs,
                      "state": state(w, n), "closed_event": closed_event(w, issue.node_id),
                      "workflows_enabled": [[x.name, x.enabled] for x in projects.workflows(w.ag, w.cfg) if x.name in done.CLOSING_WORKFLOWS]}
-    assert closed, "#%d is still open %d s after its item was set to Done" % (n, WAIT)
+    assert bool(closed) == on, "Auto-close issue is %s, but #%d is %s after its item was set to Done" % (
+        "on" if on else "off", n, "closed" if closed else "still open")
 
 
 # ---- AC5: a merge into a non-default branch ignores Closes; done closes ----
@@ -409,7 +439,11 @@ def test_ac5_merge_into_a_non_default_branch_ignores_closes_and_done_closes(worl
 
 # ---- T26f: done --pr on a merge into the default branch (GitHub closed it; done records it and posts the ledger once) ----
 def test_t26f_done_pr_after_a_default_branch_merge_posts_only_the_ledger_comment(world, capsys):
+    """Both switch states. The merge closes the story either way. "Item closed" on: the card reaches Done by itself and
+    `done --pr` posts only the ledger comment. "Item closed" off: the card does not move, and `done --pr` posts the comment
+    and sets Done itself."""
     w = world
+    on = w.switches["item_closed"]
     issue, item = new_issue(w, "T26f live story E: pickup notes", STORY_BODY, board=True)
     n = issue.ref.number
     head = story_branch(w, capsys, n, "pickup notes")
@@ -417,13 +451,13 @@ def test_t26f_done_pr_after_a_default_branch_merge_posts_only_the_ledger_comment
     gh_pr_merge(w, pr)
     assert poll(lambda: state(w, n)[0] == "closed")[0]
     ev = closed_event(w, issue.node_id)
-    at_done, secs = poll(lambda: (status(w, item) or ("", ""))[0] == "Done")
+    at_done, secs = poll(lambda: (status(w, item) or ("", ""))[0] == "Done", timeout=WAIT if on else NEGATIVE_WAIT)
     rec = RECORD["t26f_default"] = {"issue": n, "item": item, "pr": pr, "closed_event": ev, "done_after_close_s": secs}
-    assert ev["closer"]["__typename"] == "PullRequest" and ev["closer"]["number"] == pr and at_done
+    assert ev["closer"]["__typename"] == "PullRequest" and ev["closer"]["number"] == pr and bool(at_done) == on
     code, plan, out, err, writes = done_gated(w, capsys, n, "--pr", str(pr))
     rec.update(done_plan=plan, done_output=out[len(plan):].strip(), done_writes=writes)
     assert code == 0 and done.GIVEN_LINKED in plan and done.GIVEN not in plan, (plan, err)
-    assert writes == ["POST repos/%s/issues/%d/comments" % (FULL, n)] and "posted the ledger comment" in out, (writes, out, err)
+    assert writes == after_merge_writes(FULL, n, on) and "posted the ledger comment" in out, (writes, out, err)
     code, plan, out, err, writes = done_gated(w, capsys, n, "--pr", str(pr))
     rec["rerun"] = {"exit": code, "output": out.strip().splitlines()[-1], "writes": writes}
     assert code == 0 and "nothing sent: already done" in out and writes == [] and len(marked(w, n)) == 1

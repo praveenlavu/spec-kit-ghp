@@ -331,7 +331,7 @@ def check_step_ids(w):
 # review round 1 (I3, M3): the exact agent arguments and the exact `ghp` line of every guarded step that is not a triplet. The engine runs `sh -c`
 # without `-e`, so the LAST command's status is the step's: a second line or a `; echo ok` after the `ghp` call would hide its exit code.
 COMMAND_ARGS = {"pull": ("speckit.ghp.pull", ISSUE + " --workflow"), "plan": ("speckit.ghp.plan", ISSUE + " --workflow"),
-                "plan-with-answers": ("speckit.ghp.plan", ISSUE + " --workflow --close-assumed"), "tasks": ("speckit.ghp.tasks", ISSUE),
+                "plan-with-answers": ("speckit.ghp.plan", ISSUE + " --workflow --close-assumed"), "tasks": ("speckit.ghp.tasks", ISSUE + " --workflow"),
                 "implement": ("speckit.ghp.implement", ISSUE + " --workflow"), "gate": ("speckit.ghp.gate", ISSUE + " --workflow"),
                 "review": ("speckit.ghp.review", ISSUE + " --workflow"), "pr-prepare": ("speckit.ghp.pr", ISSUE + " --prepare-only")}
 CHECKED_GATES = ("review-spec", "wait-po-answers", "review-plan", "review-review", "wait-po-validation")  # approvals.REVIEW_GATES + WAIT_GATES
@@ -668,6 +668,7 @@ MUTANTS = {
     "reject does not abort": _set("review-spec", "on_reject", "continue"),
     # review round 1 (I3, M3)
     "implement without --workflow": lambda w: _find(w, "implement")[0].update(input={"args": ISSUE}),
+    "tasks without --workflow": lambda w: _find(w, "tasks")[0].update(input={"args": ISSUE}),
     "pr-prepare without --prepare-only": lambda w: _find(w, "pr-prepare")[0].update(input={"args": ISSUE + " --workflow"}),
     "plan-with-answers without --close-assumed": lambda w: _find(w, "plan-with-answers")[0].update(input={"args": ISSUE + " --workflow"}),
     "pull runs another command": _set("pull", "command", "speckit.ghp.plan"),

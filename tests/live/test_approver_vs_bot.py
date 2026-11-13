@@ -1,6 +1,7 @@
 """T31 (LIVE): approver versus agent. This is account-versus-bot, not a two-human test: the agent is `github-actions[bot]` (id 41898282, the
 Actions token of a throwaway workflow), the approver is `praveenlavu` (id 22502189, the owner's token on this machine). Scratch repo
-`praveenlavu/ghp-spike-scratch` only; fictional data only.
+`praveenlavu/ghp-spike-scratch` by default, or the owner's repository named by GHP_LIVE_REPO (Actions must be able to start a job there,
+for example the public `praveenlavu/ghp-live-comment`); fictional data only.
 
 Setup (module fixture `world`, idempotent): the scratch repo's DEFAULT branch gets the throwaway workflow `.github/workflows/ghp-t31.yml` and a
 `ghp.config.json` with `approval: "comment"`, `approvers: [22502189]` (the trust keys are read only from the target branch, so they must be on

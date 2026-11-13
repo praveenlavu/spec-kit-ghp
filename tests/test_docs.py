@@ -354,7 +354,9 @@ def test_compatibility_and_boundary_pages_state_the_facts():
 # ---- T38 review fix: the honesty lines no test pinned (I8), the exit codes as the CLI really returns them (I2), the hosted-CI facts (I1) ----
 def test_the_honesty_lines_are_pinned():
     readme = _flat(_text(ROOT / "README.md"))
-    for needle in ("| GitHub Actions workflows | Built and tested offline; not yet run in another repository |",
+    for needle in ("| GitHub Actions workflows | Tested offline and run once in another repository; some cases not run yet (see below) |",
+                   "Not run there yet: link-on-merge with the project token, a merge into a branch other than the default one, pull requests from forks, and a private repository.",
+                   "| A tagged release with its files | `v0.1.0` on GitHub: the extension file, the bundle file and their checksums | Released |",
                    'Moving a card to "Done" on the board closes its issue', 'turn off "Auto-close issue" and "Item closed"',
                    "Organisation Projects are refused", "One exception you opt into: the [link-on-merge workflow]",
                    'F -- "all pass" --> R{"You approve opening the pull request"}', 'R --> M["You merge the pull request"]',
@@ -364,12 +366,18 @@ def test_the_honesty_lines_are_pinned():
                    "**Your AI agent does the GitHub Projects grunt work. You press yes.**",
                    "**GitHub Projects (v2) and GitHub Issues only.** A community project, not an official GitHub product."):
         assert needle in readme, needle
-    assert "Works today (not yet run" not in readme  # the CI row claims no more than an offline test
+    assert "Works today (not yet run" not in readme and "not yet run in another repository" not in readme  # the CI row claims one run, not more
+    assert "Coming in 0.1" not in readme and "later live check" not in readme
     assert "Projects owned by an organisation are refused" in _flat(_text(DOCS / "quickstart.md"))
     short = _flat(_md_section(_text(TRUST), "The short version"))
     assert "is **tamper-evident, not tamper-proof**" in short and "the merge is the approval there" in short
     assert "tamper-proof" not in short.replace("not tamper-proof", "")
     ci = _flat(_text(DOCS / "ci-github.md"))
+    assert "have run once in another repository on GitHub's hosted runners" in ci and "have not yet run in another repository" not in ci
+    assert "Not run there yet: link-on-merge with the `GHP_PROJECT_TOKEN` secret" in ci
+    trust = _flat(_text(TRUST))
+    assert "have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release commit, by an AI agent" in trust
+    assert "Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks" in trust
     for needle in ("- **Strict mode and the board.** The strict checks in CI", "never read the Project board", "The board check runs only in `ghp strict check <n> --phase implement`",
                    "The workflow gives it no secret, but the code runs with full control of the runner",
                    "it can read the job's read-only token from memory",
@@ -467,3 +475,34 @@ def test_contributing_says_a_live_run_uses_a_clean_agent_home():
     for needle in ("a clean agent home", "no global agent config", "no plugins and no hooks", "a throwaway folder",
                    "sign the agent in there", "never copy your own settings into it", "Before the run, check"):
         assert needle in hygiene, needle
+
+
+def test_ci_page_names_the_setting_a_workflow_needs_to_open_a_pull_request():
+    """Live: `pr create --apply` with the Actions token got HTTP 403 while the repository setting was off (its default)."""
+    ci = _flat(_text(DOCS / "ci-github.md"))
+    for needle in ('"Allow GitHub Actions to create and approve pull requests"', "It is off by default", "HTTP 403",
+                   "The ready-made workflows never open a pull request"):
+        assert needle in ci, needle
+
+
+def test_trust_page_says_only_a_comment_starting_with_the_request_marker_delays():
+    """Live: a quoted (`>`) request line did not make the step wait; a comment starting with the exact marker did (`_REQUEST.match`)."""
+    t = _flat(_text(DOCS / "trust-and-limits.md"))
+    assert "Only a comment that starts with the marker counts" in t and "or quotes a comment `ghp` posted" not in t
+
+
+def test_done_wait_is_described_as_about_30_seconds_plus_reads():
+    """Live: `done`'s window was 35 s (30 s of sleep, one read every 3 s, plus the reads), not "up to 30 seconds"."""
+    line = ("`ghp done` waits about 30 seconds, plus the time of the reads (about 35 seconds in the live runs), "
+            "for the board automation before it sets Done itself.")
+    for doc in (DOCS / "trust-and-limits.md", DOCS / "catalog-submission.md"):
+        t = _flat(_text(doc))
+        assert line in t and "waits up to 30 seconds" not in t, doc
+
+
+def test_plan_command_and_hitl_agree_that_approvals_check_is_a_free_read():
+    """`ghp approvals check` only reads and pins a trusted approver's own approval (it never approves or resumes): every rule file says so alike."""
+    hitl, plan = flat("rules", "hitl.md"), flat("commands", "plan.md")
+    assert "| Check a gate in comment mode (`ghp approvals check <n> --gate <gate>`) | Free: a read" in hitl
+    assert "`ghp approvals check`" not in plan.split("never run", 1)[1].split(":", 1)[0]
+    assert "never run `ghp approvals sync` or `specify workflow resume" in plan and "`ghp approvals check <n> --gate <gate>` is a free read" in plan

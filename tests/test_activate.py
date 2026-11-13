@@ -168,7 +168,7 @@ def test_an_open_issue_at_done_is_told_plainly_what_happened_and_what_to_do(tmp_
     assert apply(hub) == 2
     err = " ".join(capsys.readouterr().err.split())
     assert "E_ALREADY_DONE" in err and "#11 is open but its Project item is at 'Done'" in err
-    assert "Reopening an issue does not move its card" in err and "move it back by hand in the Project" in err and "ghp never moves a card out of Done" in err
+    assert "moved to Done without closing the issue, or the issue was reopened" in err and "move it back by hand in the Project" in err and "ghp never moves a card out of Done" in err
     assert hub.sent() == [] and hub.status[ITEM] == "Done"  # still refused, nothing written
     assert cli.main(["activate", "11"], gh=hub_with("Done")) == 2  # the preview refuses too
 

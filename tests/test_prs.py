@@ -121,6 +121,15 @@ def test_multiple_issues_repeat_the_keyword():
     assert title == "Add x #1 #2" and body == "Text\n\nSUMMARY\n\nCloses #1, closes #2\n"
 
 
+@pytest.mark.parametrize("text", ["Closes #1\n", "    Closes #1\n", "\tCloses #1\n", "<pre>\nCloses #1\n</pre>\n", "<details>\nCloses #1\n</details>\n",
+                                  "Clo<!-- -->ses #1\n"])
+def test_the_closing_line_is_always_added_once_whatever_the_body_says(text):
+    # a duplicate line only looks odd; a missing one stops the PR closing the story, so ghp never guesses that the body already closes it
+    _, body, _ = prs.compose("Add x", text, [1], "S")
+    assert body == text.rstrip() + "\n\nS\n\nCloses #1\n"
+    assert prs.other_closes([prs.without_generated(prs.compose("Add x", text + "Closes #99\n", [1], "S")[1], [1])], "octo", "demo", [1]) == ["octo/demo#99"]
+
+
 def test_pr_body_has_closes_and_ref(tmp_path, monkeypatch, capsys):
     env(tmp_path, monkeypatch)
     (tmp_path / "dod").mkdir()

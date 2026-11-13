@@ -357,7 +357,7 @@ def test_stack_command_ties_into_the_lifecycle_commands():
 def test_setup_installs_the_release_tag():
     """The install line names the release, as the README and AGENTS.md do, not whatever `main` holds."""
     text = flat("commands", "setup.md")
-    assert "pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0" in text
+    assert "pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1" in text
     assert "spec-kit-ghp.git`" not in text  # no unpinned install line left
 
 
@@ -526,3 +526,11 @@ def test_every_applying_command_stops_on_an_unexpected_preview():
     for name in ("push", "pr", "done", "pull", "plan", "implement"):
         assert "stop, show it to the human and ask; never apply it" in flat("commands", name + ".md"), name
     assert "stop, show it to the human and ask" in flat("rules", "hitl.md") and "stop and ask when a preview shows anything unexpected" in flat("AGENTS.md").lower()
+
+
+@pytest.mark.parametrize("name", ["tasks", "review"])
+def test_workflow_steps_end_without_a_question(name):
+    """Live: unattended `tasks` and `review` ended with "Want me to run it?" that nobody can answer; under `--workflow` they end with a summary."""
+    text = " ".join(read("commands", name + ".md").split())
+    assert "With `--workflow`, end with a short summary, never a question or an offer" in text, name
+    assert "nobody can reply until the next gate" in text, name

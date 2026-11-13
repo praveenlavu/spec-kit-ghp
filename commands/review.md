@@ -36,7 +36,8 @@ skip. Whatever would be a question becomes one line `- [ ] <decision needed> —
 under `### Needs human decision` at the end of ledger section 2 (add the heading if it is
 missing; this is the one edit to sections 1–3, 5 that review makes, and only under
 `--workflow`). Then carry on. Section 4 always gets an entry, even when the review could
-not run.
+not run. With `--workflow`, end with a short summary, never a question or an offer (no "if you want this fixed, ..."): the
+findings and the `Needs human decision` lines are for the person at the `review-review` gate.
 
 ## Steps
 

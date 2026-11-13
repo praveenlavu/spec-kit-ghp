@@ -7,7 +7,7 @@ Ported from ado's `approvals`. Comment mode (`approval: "comment"` on the TARGET
   verb's gates (`VERB_GATES`, one target) must be `/approve <gate> <hash>` with `hash = gate_hash(gate, issue, the rendered plan)`, newer than every
   approval request for that hash, with no newer malformed approver line (ado's `_decide`). Then the PINS (below) of that plan must hold. `done` needs a pin.
 - `check` (`ghp approvals check <n> --gate <g>`): a review gate by the hash of its artifacts (`artifacts`), a wait gate by what the comments show
-  (`wait_state`); the apply gates are checked by their own `--apply`.
+  (`wait_state`), `approve-done` by the hash of `.ghp/plan-done.md` (the pin `done` needs); the other apply gates are checked by their own `--apply`.
 - Pins (`.ghp/approvals/<n>.json`, written by `check` and `sync` when a gate is met): the approving comment (`pin`) and EVERY approver command comment seen
   for the gate's targets (a malformed one that could be about them included). At apply time, on the SAME fetch: every pinned comment must still be there and
   unchanged (a deleted or edited later `/reject` refuses), `recheck` must pass for the approval, and `newest` must still return the pinned approval's id (a
@@ -442,8 +442,9 @@ E_BASE_UNKNOWN = ("comment approval: the --base given is not a branch here (not 
 E_APPROVERS_DIFFER = ("comment approval: the default branch and the PR's target branch name different approvers, so it is unclear who may approve; "
                       "make `approvers` the same on both")
 E_VERB = "comment approval: this verb cannot be approved by a comment; nothing is approved"
-E_NOT_PINNED = ("comment approval: no approval of this plan was pinned for issue #{n} (`ghp approvals sync <run>` pins it when the approver's comment is "
-                "read), so the story is not closed.")
+E_NOT_PINNED = ("comment approval: no approval of this plan was pinned for issue #{n}, so the story is not closed. Preview with "
+                "`ghp done {n} --plan-out .ghp/plan-done.md`; once a trusted approver's `/approve approve-done <hash>` comment for that plan exists, "
+                "`ghp approvals check {n} --gate approve-done` pins it.")
 E_PIN_FILE = ("comment approval: the pin file .ghp/approvals/{n}.json cannot be read (a symlink, outside the working tree, over 1 MiB, not UTF-8 or not "
               "the shape ghp writes), so nothing is approved.")
 E_PIN_GONE = ("comment approval: a comment pinned when the approval was read is gone or changed since (a deleted or edited /reject could bring an "
@@ -534,6 +535,8 @@ def _decide(gh, trust, ref, make_hashes, ci_identity=None):
     found, skip, me = _load(gh, trust, ref, ci_identity)
     approvers = set(trust.approvers)
 
+    not_counted = {}  # guard reason -> how many commands for these gates it set aside (first scan only): said in the refusal
+
     def scan(rows):
         wins, bad, by = {}, 0, {}
         for g in hashes:
@@ -541,11 +544,14 @@ def _decide(gh, trust, ref, make_hashes, ci_identity=None):
             wins[g] = newest(rows, g, approvers, skip, tally=tally)
             if tally.get("bad_newer", 0) > bad:
                 bad, by = tally["bad_newer"], tally["bad_newer_by"]
+            if rows is found:
+                _add_by(not_counted, {k: tally[k] for k in GUARD_WORDS if tally.get(k)})
         return {g: w for g, w in wins.items() if w}, bad, by
 
     wins, bad, by = scan(found)
     g, best = max(wins.items(), key=lambda kv: _wkey(kv[1]), default=(None, None))
-    out = {"verdict": None, "bad": bad, "bad_by": by, "hashes": hashes, "found": found, "skip": skip, "me": me, "stale": False, "best": best}
+    out = {"verdict": None, "bad": bad, "bad_by": by, "hashes": hashes, "found": found, "skip": skip, "me": me, "stale": False, "best": best,
+           "not_counted": not_counted}
     if best and best["hash"] == hashes[g]:
         reqs, cut = _requests(found, hashes), _wkey(best)
         fresh = None not in reqs and all(r < cut for r in reqs)
@@ -573,10 +579,25 @@ def _bad(by, what="for this plan"):
     return " %s %s: check the thread." % (text, what) if text else ""
 
 
+GUARD_WORDS = {"bot-author": "by a bot or app account", "not-approver": "by an account that is not an approver",  # one fixed wording per `guard` code
+               "excluded-author": ("by an excluded account (the signed-in or CI account, or an account that posted a comment starting with "
+                                   "`[spec-kit-ghp:` on this issue, until that comment is deleted)"),
+               "edited": "edited after posting", "minimized": "hidden (minimized)", "app-unknown": "with no record of whether an app made it",
+               "app-performed": "made through a GitHub App"}
+
+
+def _not_counted(by):
+    """Why commands for these gates were set aside (`guard` counts {code: n}): numbers and fixed words only, "" when none was."""
+    if not by:
+        return ""
+    return " %d /approve or /reject comment(s) for this plan's gates did not count: %s." % (
+        sum(by.values()), "; ".join("%d %s" % (by[k], w) for k, w in GUARD_WORDS.items() if by.get(k)))
+
+
 def _approve_for(gh, trust, ref, make_hashes, message, ci_identity=None):
     d = _decide(gh, trust, ref, make_hashes, ci_identity)
     if d["verdict"] != "approve":
-        raise ApprovalMissing(message(d["hashes"], d["bad_by"]))
+        raise ApprovalMissing(message(d["hashes"], d["bad_by"]) + _not_counted(d["not_counted"]))
     return d
 
 
@@ -792,8 +813,9 @@ def check(gh, trust, ref, gate_id, cfg, repo=".", ci_identity=None):
     """`ghp approvals check`: a dict `{"gate", "mode", "met": True, ...}` when the gate is met, else ApprovalRefused / ApprovalMissing (fixed text; nothing
     from a comment). An unknown gate is refused first. Terminal mode is a no-op that reads nothing from GitHub. Comment mode: a review gate needs the newest
     valid approver command over the gate to be `/approve <gate> <hash of artifacts()>` (the shared `_approve_for`, so a request, a newer reject and newer
-    malformed lines count as for the applies), and is then pinned (`record_pins`); a wait gate needs `wait_state` met; the apply gates are checked by their
-    own `--apply` (`require`) and are refused here."""
+    malformed lines count as for the applies), and is then pinned (`record_pins`); `approve-done` the same over its plan file (`_view`, as `sync`), since
+    `done --apply` requires that pin; a wait gate needs `wait_state` met; the other apply gates are checked by their own `--apply` (`require`) and are
+    refused here."""
     if gate_id not in GATES:
         raise ApprovalRefused(E_GATE)
     if trust.approval != "comment":
@@ -802,10 +824,10 @@ def check(gh, trust, ref, gate_id, cfg, repo=".", ci_identity=None):
         return {"gate": gate_id, "mode": "terminal", "met": True, "note": "terminal mode: a person answers this gate in the terminal; nothing was read"}
     if gate_id in WAIT_GATES:
         return wait_check(gh, trust, ref, gate_id, cfg, repo, ci_identity)
-    if gate_id not in REVIEW_GATES:
+    if gate_id not in REVIEW_GATES and gate_id != "approve-done":  # `done --apply` needs a pin of approve-done; no shipped run step pauses there
         raise ApprovalRefused(E_APPLY_GATE.format(gate=gate_id))
     n = ref.number
-    d = _approve_for(gh, trust, ref, lambda: {gate_id: gate_hash(gate_id, n, artifacts(gate_id, n, cfg, repo))},
+    d = _approve_for(gh, trust, ref, lambda: _view(gate_id, n, cfg, repo),  # approve-done: the hash of .ghp/plan-done.md, exactly as sync reads it
                      lambda hashes, bad: E_REVIEW.format(gate=gate_id, n=int(n), hash=hashes[gate_id], bad=_bad(bad)), ci_identity)
     pins = read_pins(repo, n)
     _replaced_pins_hold(d, pins, n)  # its pin of OLDER text is replaced below, but never forgives a deleted comment (T28e)

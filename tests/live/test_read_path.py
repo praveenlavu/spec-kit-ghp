@@ -46,6 +46,8 @@ def test_comments(gh, scratch, config_dir, capsys):
 
 
 def test_project_show(gh, config_dir, capsys):
+    """Any switch state: the six built-in workflows are listed, each as enabled or disabled exactly as GitHub reports it
+    (the switches are set in the Project's settings by hand and may be on or off)."""
     code, out, _ = run(capsys, gh, "project", "show")
     assert code == 0
     for name, role in (("Todo", "status_todo"), ("In Progress", "status_active"), ("Done", "status_done")):
@@ -53,8 +55,10 @@ def test_project_show(gh, config_dir, capsys):
     names = {"Item closed", "Pull request merged", "Auto-close issue", "Auto-add sub-issues to project",
              "Pull request linked to issue", "Item added to project"}
     flows = projects.workflows(gh, _cfg(config_dir))
-    assert {w.name for w in flows} == names and all(w.enabled for w in flows)  # all six are enabled on Project 3 (evidence)
-    assert sum(l.endswith(" enabled") for l in out.splitlines()) == 6
+    assert {w.name for w in flows} == names
+    for w in flows:
+        assert any(l.split()[:1] == ["#%d" % w.number] and l.endswith(" enabled" if w.enabled else " disabled")
+                   for l in out.splitlines()), (w, out)
 
 
 def _cfg(config_dir):

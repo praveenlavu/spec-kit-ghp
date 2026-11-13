@@ -97,8 +97,8 @@ def test_every_ghp_verb_in_code_is_real_or_marked_coming():
 
 def test_coming_table_names_only_verbs_that_do_not_exist_yet():
     coming = coming_verbs()
-    # once every `ghp` verb exists (T30), what is still coming is slash commands and workflows: the table must still list something
-    assert coming or any("Coming" in ln for ln in text(README).splitlines() if ln.startswith("|")), "the README status table should list what is coming"
+    # the 0.1.0 release shipped the last row that was coming; a row may be marked Coming again, but none must be
+    assert "Coming in 0.1" not in text(README)
     assert not coming & set(REGISTRY), "a verb that works today is still marked Coming"
     rows = [ln for ln in text(README).splitlines() if ln.startswith("|") and "Coming" in ln]
     shipped = [f for ln in rows for f in re.findall(r"`([\w./-]+\.md)`", ln) if (ROOT / f).is_file()]
@@ -107,7 +107,7 @@ def test_coming_table_names_only_verbs_that_do_not_exist_yet():
 
 # ---- README install and help: the release pin, the bundle route, the likely failures, the comparison, the done --pr rule ----
 QUICKSTART = ROOT / "docs" / "quickstart.md"
-PIN = "git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0"
+PIN = "git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1"
 
 
 def flat(p):
@@ -125,19 +125,19 @@ def test_install_is_pinned_to_the_release_tag(doc):
     t = text(doc)
     assert "pipx install %s\n" % PIN in t and "python3 -m pip install --user %s`" % PIN in t
     # every install address of this repository names the tag
-    assert all(a.endswith("@v0.1.0") for a in re.findall(r"git\+https://github\.com/praveenlavu/spec-kit-ghp(?:\.git)?\S*?(?=[`\s])", t))
-    assert "the `v0.1.0` tag is created when 0.1.0 is released" in flat(doc).replace("The `v0.1.0`", "the `v0.1.0`")
+    assert all(a.endswith("@v0.1.1") for a in re.findall(r"git\+https://github\.com/praveenlavu/spec-kit-ghp(?:\.git)?\S*?(?=[`\s])", t))
+    assert "the `v0.1.1` tag is created when 0.1.1 is released" in flat(doc).replace("The `v0.1.1`", "the `v0.1.1`")
 
 
 def test_readme_gives_the_bundle_route_as_the_bundle_page_does():
     t, bundle_page = text(README), text(ROOT / "bundle" / "README.md")
     for line in ("specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed",
                  "specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp",
-                 "curl -L -o ghp-0.1.0.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip",
-                 "specify bundle install ./ghp-0.1.0.zip"):
+                 "curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip",
+                 "specify bundle install ./ghp-0.1.1.zip"):
         assert line + "\n" in t and line in bundle_page and line in text(ROOT / "docs" / "catalog-submission.md"), line
     assert "(https://github.com/praveenlavu/spec-kit-ghp/blob/main/bundle/README.md)" in t  # bundle/ is not installed: a full address
-    assert "It needs the release, which does not exist yet." in flat(README)
+    assert "The bundle file is attached to the 0.1.1 release." in flat(README) and "does not exist yet" not in flat(README)
 
 
 def test_the_likely_failures_are_in_the_readme_with_their_real_exit_codes():
@@ -163,3 +163,11 @@ def test_quickstart_says_done_pr_needs_a_closing_keyword():
     t = flat(QUICKSTART)
     assert "carry a closing keyword for the story, such as `Closes #12`, in its title or body. A mention is not enough" in t
     assert "`E_PR_NOT_LINKED` (exit code 2)" in t and "and mention the issue." not in t
+
+
+def test_readme_and_quickstart_explain_both_slash_spellings():
+    """Live on Spec Kit 1.4.0 with Claude Code the commands are skills `speckit-ghp-*`; the dotted form is an unknown skill there."""
+    for p in (README, QUICKSTART):
+        t = flat(p)
+        assert "ith Spec Kit 1.4.0 and Claude Code they are installed as skills named with hyphens" in t, p
+        assert "`/speckit-ghp-pull 12`" in t and "Unknown skill" in t and "`specify extension list` shows that the extension is installed" in t, p

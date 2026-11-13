@@ -161,7 +161,7 @@ class Config:
         if missing:
             raise ConfigInvalid(f"{path}: missing required key(s): {', '.join(missing)}")
         if "dod_gate" in data:
-            raise ConfigInvalid(f"{path}: `dod_gate` was renamed to `gate` in 0.1.1; "
+            raise ConfigInvalid(f"{path}: `dod_gate` was renamed to `gate`; "
                               "move `dod_gate.block` to `gate.block`")
         for k in ("gate", "stack", "rules", "unattended"):
             if k in data and not isinstance(data[k], dict):

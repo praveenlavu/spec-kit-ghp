@@ -56,9 +56,10 @@ def _target(cfg, board=None):
 def _not_done(now, cfg, board, issue):
     """Refuse an item whose current Status is the done option, by option id or by name (either one)."""
     if now is not None and (now[1] == board.options[cfg.status_done] or now[0] == cfg.status_done):
-        if issue.state == "open":  # the usual cause: the issue was reopened, and nothing in the Project moves its card back (T26b, seen live)
-            raise ActivateError("E_ALREADY_DONE", "#%d is open but its Project item is at '%s'. Reopening an issue does not move its card, and ghp never "
-                                "moves a card out of Done; move it back by hand in the Project, then run ghp activate again" % (issue.ref.number, _cell(now[0])))
+        if issue.state == "open":  # a card moved to Done with no close (no closing workflow), or a reopened issue whose card nothing moves back
+            raise ActivateError("E_ALREADY_DONE", "#%d is open but its Project item is at '%s': the card was moved to Done without closing the issue, or "
+                                "the issue was reopened (reopening does not move its card). ghp never moves a card out of Done; move it back by hand in "
+                                "the Project, then run ghp activate again" % (issue.ref.number, _cell(now[0])))
         raise ActivateError("E_ALREADY_DONE", "the Project item of #%d is already at '%s'; activate does not move it back (do that by hand "
                             "on the Project)" % (issue.ref.number, _cell(now[0])))
 

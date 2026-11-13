@@ -510,7 +510,7 @@ def test_unknown_gate_refused_and_apply_gates_not_checked_here(tmp_path, monkeyp
     seen = trust_is(monkeypatch, COMMENT)
     code, _, err = _check(capsys, NoWriteGh(), "review-everything")
     assert code == 2 and approvals.E_GATE in err and seen == []  # refused before the trust is read
-    for gate in ("approve-push", "approve-pr", "approve-done"):
+    for gate in ("approve-push", "approve-pr", "approve-activate"):  # approve-done is pinned by check: tests/test_done_comment_pin.py
         code, _, err = _check(capsys, NoWriteGh(), gate)
         assert code == 2 and "is not checked here" in err
 

@@ -45,16 +45,16 @@ def test_version_is_consistent_everywhere():
     }
     assert set(found.values()) == {found["ghp/__init__.py"]}, found
     assert FINAL.match(found["ghp/__init__.py"]), "a release candidate carries a plain number, not a dev or pre-release one"
-    assert found["ghp/__init__.py"] == "0.1.0"
+    assert found["ghp/__init__.py"] == "0.1.1"
 
 
 def test_changelog_carries_the_release_date_and_the_catalogs_agree():
     """T72-AC1: the first release heading has a plain date, the workflow changelog and both catalogs carry the same one."""
     first = re.search(r"^## .*$", text(ROOT / "CHANGELOG.md"), re.M).group(0)
-    m = re.fullmatch(r"## 0\.1\.0 \((\d{4}-\d\d-\d\d)\)", first)
+    m = re.fullmatch(r"## 0\.1\.1 \((\d{4}-\d\d-\d\d)\)", first)
     assert m, first
     day = m.group(1)
-    assert re.search(r"^## 0\.1\.0 \(%s\)$" % day, text(ROOT / "workflows" / "ghp-lifecycle" / "CHANGELOG.md"), re.M)
+    assert re.search(r"^## 0\.1\.1 \(%s\)$" % day, text(ROOT / "workflows" / "ghp-lifecycle" / "CHANGELOG.md"), re.M)
     for name in ("extensions.json", "workflows.json"):
         stamps = set(re.findall(r'"(?:created|updated)_at": "([^"]+)"', text(ROOT / "catalog" / name)))
         assert stamps == {day + "T00:00:00Z"}, (name, stamps)
@@ -141,7 +141,8 @@ def test_the_release_commit_is_dated_before_it_is_checked_and_tagged():
 def test_the_checklist_does_not_claim_progress():
     t = flat(CHECKLIST)
     assert "Nothing on this list has been done yet" not in t
-    assert "the steps, not their progress" in t and "already exists" in t and "skip the creation" in t
+    assert "the steps, not their progress" in t and "should already exist" in t and "skip the creation" in t
+    assert "The release is not published" not in t and "already exists and `main` is pushed there" not in t
 
 
 def test_the_checksum_is_of_a_release_file():
@@ -150,7 +151,7 @@ def test_the_checksum_is_of_a_release_file():
     assert "sha256" in body and "releases/download" in body and "tag archive" in body
     # The tag snapshot stays immutable; installers use main to receive the checksum.
     assert "goes only into the entry filed upstream (step 26) and into `catalog/extensions.json` on `main`" in body
-    assert "served from the `v0.1.0` tag" in body and "carries no checksum" in body and "Owner decision: serve each `catalog_url` from `main`" in body
+    assert "served from the `v0.1.1` tag" in body and "carries no checksum" in body and "Owner decision: serve each `catalog_url` from `main`" in body
     for pin in ("test_what_is_not_known_yet_is_marked_and_nothing_is_invented", "add `sha256` once the release file exists",
                 "test_extension_form_values_are_the_manifests"):
         assert pin in body, pin
@@ -170,7 +171,7 @@ def test_the_attach_step_agrees_with_the_checksum_step():
 def test_the_checklist_defines_who_and_keeps_tokens_out_of_agent_hands():
     t = flat(CHECKLIST)
     for needle in ("**Owner** is the person who owns the repository", "**Controller** is the coordinating session", "never types a token",
-                   "never pushes a tag", "The `0.1.0` tag is the owner's alone"):
+                   "never pushes a tag", "The `0.1.1` tag is the owner's alone"):
         assert needle in t, needle
 
 
@@ -208,20 +209,20 @@ def test_the_fresh_history_comes_from_the_export_script_and_the_owner_pushes_it(
 # ---- T54: the release files are built, checked and installed after the tag ----
 RELEASE_STEPS = [  # (heading fragment, who, needles in the step's text)
     ("Create and push the", "Owner", ["git push"]),
-    ("Build the extension file and the bundle file", "Controller", ["clean checkout of the `v0.1.0` tag", "python3 scripts/build_extension_zip.py <dir>",
+    ("Build the extension file and the bundle file", "Controller", ["clean checkout of the `v0.1.1` tag", "python3 scripts/build_extension_zip.py <dir>",
                                                                     "byte for byte the same", "not across machines", "specify bundle validate --path bundle",
-                                                                    "specify bundle build --path bundle --output <dir>", "ghp-0.1.0.zip",
-                                                                    "spec-kit-ghp-extension-0.1.0.zip"]),
-    ("Write the checksums file", "Controller", ["shasum -a 256 spec-kit-ghp-extension-0.1.0.zip ghp-0.1.0.zip > SHA256SUMS"]),
-    ("Attach the extension archive and the bundle file", "Owner", ["spec-kit-ghp-extension-0.1.0.zip", "ghp-0.1.0.zip", "SHA256SUMS",
+                                                                    "specify bundle build --path bundle --output <dir>", "ghp-0.1.1.zip",
+                                                                    "spec-kit-ghp-extension-0.1.1.zip"]),
+    ("Write the checksums file", "Controller", ["shasum -a 256 spec-kit-ghp-extension-0.1.1.zip ghp-0.1.1.zip > SHA256SUMS"]),
+    ("Attach the extension archive and the bundle file", "Owner", ["spec-kit-ghp-extension-0.1.1.zip", "ghp-0.1.1.zip", "SHA256SUMS",
                                                                    "automatic archive of the tag"]),
     ("Check that every catalog address answers", "Controller", ["curl -sSIL", "200", "without signing in", "catalog_url", "raw workflow file",
                                                                 "documentation and changelog"]),
     ("Add the checksum", "Controller", ["sha256", "SHA256SUMS"]),
     ("Install each part in a clean project, on two Spec Kit versions", "Controller", [
         "Spec Kit 1.2.1", "the newest Spec Kit", "specify init", "specify extension add ghp --from <download address>", "13 commands and 2 hooks",
-        "specify workflow add <raw workflow address>", "specify extension add ghp --version 0.1.0", "specify workflow add ghp-lifecycle --version 0.1.0",
-        "`requires`", "specify bundle install ./ghp-0.1.0.zip"]),
+        "specify workflow add <raw workflow address>", "specify extension add ghp --version 0.1.1", "specify workflow add ghp-lifecycle --version 0.1.1",
+        "`requires`", "specify bundle install ./ghp-0.1.1.zip"]),
     ("Install the bundle by its id from a local catalog", "Controller", ["--policy install-allowed", "specify bundle install ghp", "UNVERIFIED"]),
     ("Fill in the testing details", "Controller", ["Testing Details", "TO CONFIRM", "only the boxes that were really done"]),
     ("File the catalog entries", "Owner", ["github/spec-kit"]),
@@ -277,10 +278,10 @@ def test_each_step_after_the_export_names_its_repository():
     assert "the tree check of step 10 reports nothing but the internal working notes" in body_of("Review the whole branch")
     assert "the tag points at it" not in body_of("Put the date on the changelog")
     tag = body_of("Create and push the")
-    for needle in ("In the export folder of step 10, tag its one commit `v0.1.0`", "push the tag to the public repository",
+    for needle in ("In the export folder of step 10, tag its one commit `v0.1.1`", "push the tag to the public repository",
                    "not the release commit of this repository", "make a GitHub release from it in the public repository"):
         assert needle in tag, needle
-    assert "`v0.1.0` tag of the public repository" in body_of("Build the extension file and the bundle file")
+    assert "`v0.1.1` tag of the public repository" in body_of("Build the extension file and the bundle file")
     checksum = body_of("Add the checksum")
     assert "a new commit on `main` of the public repository, made in the export folder" in checksum
     assert "the same change in a commit on `main` of this repository too" in checksum
@@ -301,6 +302,6 @@ def test_the_consumer_run_of_the_workflows_is_the_last_step_after_going_public()
     assert head == "27. Run the ready-made workflows in another repository (owner only)"
     assert position("Run the ready-made workflows") > position("Make the repository public")
     b = body_of("Run the ready-made workflows")
-    for needle in ("After step 15", "at the `v0.1.0` tag", "hosted runners", "`GHP_PROJECT_TOKEN`", "only the owner creates that secret",
-                   '"not yet run in another repository"', "(" + EVIDENCE + "T39.md)"):
+    for needle in ("After step 15", "at the `v0.1.1` tag", "hosted runners", "`GHP_PROJECT_TOKEN`", "only the owner creates that secret",
+                   'the docs list it as "not run there yet"', "(" + EVIDENCE + "T39.md)"):
         assert needle in b, needle

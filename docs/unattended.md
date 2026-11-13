@@ -52,4 +52,4 @@ These items from the [list of behaviours not checked on real GitHub](trust-and-l
 - **Two-person approval.** Approval was tested with one person and one bot, not with two people.
 - **A comment deleted by another writer.** Only a comment deleted by its own author was observed.
 - **The comment join race.** A comment posted, changed or deleted between `ghp`'s two reads of the comment list is dropped, never counted.
-- **The Spec Kit minimum version.** Spec Kit 1.2.1, the oldest supported version, has not been tried. The contract tests ran against 1.2.4.dev0 only.
+- **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The contract tests and the live lifecycle run used 1.2.4.dev0 only, so running the workflow on 1.2.1 or 1.4.0 has not been tried.

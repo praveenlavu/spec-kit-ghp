@@ -8,6 +8,9 @@ live test is refused (fail closed). Then the viewer read (`Gh.viewer()`, GraphQL
 That viewer read is itself one GitHub read, made with whatever token `gh` has active, before the refusal can happen: set
 GH_TOKEN per command (below) so that token is the owner's. The autouse fixture makes every test in this directory depend on
 the guard, so no live test reaches GitHub without it. `gh` does its own authentication: nothing here reads a token.
+GHP_LIVE_REPO names another of that account's repositories as the target (`name` or `praveenlavu/name`; unset: the private
+scratch repo `praveenlavu/ghp-spike-scratch`, as before). Any other owner, or a name that is not a plain repository name, is
+refused before any call. Use it for the tests that need GitHub Actions (test_approver_vs_bot.py) on a public scratch repo.
 Run: GHP_LIVE=1 GHP_LIVE_ACCOUNT=praveenlavu GH_TOKEN=$(gh auth token -u praveenlavu) python3 -m pytest tests/live -q
 """
 import os
@@ -22,12 +25,26 @@ DENYLIST = Path(__file__).resolve().parents[2] / ".scrub-denylist"  # owner-supp
 ALLOWED = "praveenlavu"  # the only account a live run may declare (the targets below are this account's scratch repo)
 STORY_TITLE = "Live story: opening hours (fictional)"  # T13's fixtures, found by label AND this exact title
 SUB_TITLE = "Live sub-issue: render the hours (fictional)"
-OWNER, REPO, PROJECT = "praveenlavu", "ghp-spike-scratch", 3  # the scratch repository and its user Project (fictional data only)
-REPO_PATH = "repos/%s/%s" % (OWNER, REPO)
+DEFAULT_REPO = "ghp-spike-scratch"  # the private scratch repository
 
 
 class LiveRefused(Exception):
     pass
+
+
+def live_repo(env):
+    """The target repository's name: GHP_LIVE_REPO (`name` or `<ALLOWED>/name`), else DEFAULT_REPO. Refuses any other owner."""
+    value = (env.get("GHP_LIVE_REPO") or "").strip()
+    if not value:
+        return DEFAULT_REPO
+    owner, _, name = value.rpartition("/")
+    if (owner and owner.lower() != ALLOWED) or not re.fullmatch(r"[A-Za-z0-9_.][A-Za-z0-9_.-]{0,99}", name) or ".." in name:
+        raise LiveRefused("GHP_LIVE_REPO must be a repository of %r (`name` or `%s/name`), not %r" % (ALLOWED, ALLOWED, value))
+    return name
+
+
+OWNER, REPO, PROJECT = ALLOWED, live_repo(os.environ), 3  # the scratch repository and its user Project (fictional data only)
+REPO_PATH = "repos/%s/%s" % (OWNER, REPO)
 
 
 def forbidden_accounts(env, path=DENYLIST):
@@ -51,6 +68,7 @@ def require_live_account(env, gh, denylist=DENYLIST):
         raise LiveRefused("GHP_LIVE_ACCOUNT names a forbidden account; refused always")
     if want.lower() != ALLOWED:
         raise LiveRefused("GHP_LIVE_ACCOUNT must be %r (the scratch repo is that account's), not %r" % (ALLOWED, want))
+    live_repo(env)
     login = gh.viewer().login
     if login.lower() in forbidden:
         raise LiveRefused("the viewer read returned a forbidden account; refused always")
@@ -82,11 +100,21 @@ def gh():
     return real
 
 
-@pytest.fixture(scope="session")
-def scratch(gh):
+PAGE, MAX_PAGES = 100, 50
+
+
+def find_scratch(gh):
     """Numbers of the fictional objects created by hand for T13 (docs/evidence/T13.md): the issue with the label ghp:live-test
-    and exactly the title STORY_TITLE (one sub-issue titled SUB_TITLE, one comment), and any pull request in the repo."""
-    found = gh.rest("GET", REPO_PATH + "/issues?labels=ghp:live-test&state=all&per_page=100")
+    and exactly the title STORY_TITLE (one sub-issue titled SUB_TITLE, one comment), and any pull request in the repo.
+    Every page of the labelled issues is read: the live runs keep adding such issues, so the story is not on the first page."""
+    found = []
+    for page in range(1, MAX_PAGES + 1):
+        batch = gh.rest("GET", REPO_PATH + "/issues?labels=ghp:live-test&state=all&per_page=%d&page=%d" % (PAGE, page))
+        found += batch
+        if len(batch) < PAGE:
+            break
+    else:
+        raise AssertionError("the ghp:live-test issue list did not end after %d pages" % MAX_PAGES)
     stories = [i["number"] for i in found if i["title"] == STORY_TITLE and "pull_request" not in i]
     assert len(stories) == 1, "expected exactly one issue labelled ghp:live-test titled %r, found %s" % (STORY_TITLE, stories)
     story = stories[0]
@@ -94,6 +122,11 @@ def scratch(gh):
     prs = gh.rest("GET", REPO_PATH + "/pulls?state=all&per_page=1")
     assert len(subs) == 1 and prs, "the live story needs its sub-issue %r and the repo needs one pull request" % SUB_TITLE
     return {"story": story, "sub": subs[0], "pr": prs[0]["number"]}
+
+
+@pytest.fixture(scope="session")
+def scratch(gh):
+    return find_scratch(gh)
 
 
 @pytest.fixture

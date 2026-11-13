@@ -417,6 +417,17 @@ def test_dry_run_sends_nothing(tmp_path, monkeypatch, capsys):
     assert not any(c[0] == "graphql" and is_graphql_write(c[1]) for c in hub.calls)
 
 
+def test_a_task_line_that_is_not_read_as_a_task_is_named_in_the_preview(tmp_path, monkeypatch, capsys):
+    cli_repo(tmp_path, monkeypatch, TASKS)
+    with open(tmp_path / "tasks.md", "a") as f:
+        f.write("- [ ] TX1 Bad id\n- [x]T004 no space\n- [ ] not a task at all\n")
+    hub = Hub()
+    assert cli.main(["push", "1", "--from", "tasks.md"], gh=hub) == 0
+    out = capsys.readouterr().out
+    assert "create 3" in out and hub.sent() == []  # what is written does not change
+    assert "line 4 is not read as a task" in out and "TX1 Bad id" in out and "line 5" in out and "line 6" not in out
+
+
 def test_apply_creates_links_and_adds_items(tmp_path, monkeypatch, capsys):
     cli_repo(tmp_path, monkeypatch, TASKS)
     hub = Hub()
@@ -486,6 +497,17 @@ def test_the_story_must_be_an_issue_and_the_tasks_file_must_be_a_confined_regula
     outside.unlink()
 
 
+def test_a_pull_request_number_without_a_ledger_is_named_as_one(tmp_path, monkeypatch, capsys):
+    cli_repo(tmp_path, monkeypatch, TASKS)  # no ledger, no --from
+    hub = Hub()
+    hub.issues[1]["pull_request"] = {"url": "x"}
+    assert cli.main(["push", "1"], gh=hub) == 2 and hub.writes == []
+    err = capsys.readouterr().err
+    assert "E_NOT_AN_ISSUE" in err and "ghp dod" not in err  # not the advice to seed a ledger for a pull request
+    del hub.issues[1]["pull_request"]
+    assert cli.main(["push", "1"], gh=hub) == 2 and "ghp dod 1 --spec-dir" in capsys.readouterr().err  # an issue still gets that advice
+
+
 def test_tasks_file_found_through_the_ledger_spec_dir(tmp_path, monkeypatch):
     cli_repo(tmp_path, monkeypatch, TASKS)
     (tmp_path / "specs" / "001").mkdir(parents=True)
@@ -495,7 +517,9 @@ def test_tasks_file_found_through_the_ledger_spec_dir(tmp_path, monkeypatch):
     hub = Hub()
     assert cli.main(["push", "1"], gh=hub) == 0 and not hub.armed and hub.sent() == []
     assert [c for c in hub.calls if c[0] == "rest"][0][2] == BASE + "/1"
-    assert cli.main(["push", "2"], gh=Hub()) == 2  # no ledger for #2 and no --from
+    hub2 = Hub()
+    hub2.issues[2] = raw(2, title="Another story", body="b")
+    assert cli.main(["push", "2"], gh=hub2) == 2  # no ledger for #2 and no --from
 
 
 # ---- AC3: the 100 limit ----

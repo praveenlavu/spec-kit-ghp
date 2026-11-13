@@ -1425,3 +1425,14 @@ def test_read_refuses_a_file_that_grew_past_the_cap_after_the_size_check(tmp_pat
     monkeypatch.setattr(os, "fstat", lambda fd: types.SimpleNamespace(st_mode=real(fd).st_mode, st_size=10))  # the size looked small when it was checked
     with pytest.raises(ValueError, match="at most 1 MiB"):
         decisions._read(f)
+
+
+def test_a_verdict_without_a_note_writes_no_empty_note_field_and_old_lines_still_read():
+    md = "- [ ] D1: Sunday is closed → _(open)_ · kind: decision · why: PO answer\n"
+    d = decisions.parse_decisions(md)["open"][0]
+    line = decisions.render_line({**d, "status": "validated", "by": "PO", "note": ""})
+    assert line == "- [x] D1: Sunday is closed → validated · by: PO · why: PO answer" and "note:" not in line
+    for text in (line, "- [x] D1: Sunday is closed → validated · by: PO · note: · why: PO answer"):  # the old form with an empty field too
+        [r] = decisions.parse_decisions(text + "\n")["validated"]
+        assert (r["by"], r["note"], r["why"]) == ("PO", "", "PO answer")
+    assert "note: why" in decisions.render_line({**d, "status": "validated", "by": "PO", "note": "why"})

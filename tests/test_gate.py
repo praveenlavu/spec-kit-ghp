@@ -59,6 +59,15 @@ def test_parse_section3_graceful_on_missing_or_placeholder():
     assert parse_section3(row) == [{"ac": "AC-1", "tests": [], "evidence": "", "status": ""}]
 
 
+def test_parse_section3_accepts_test_ids_in_backticks():
+    # the seeded ledger shows the ids as `Class.method` / `path::test_name`, so people write them that way
+    md = f"{SECTION2}\n## 3. AC\n{HDR}| AC-1 | does X | `FooTest.testX`, `t/foo.cls::testX` | abc123 | green |\n"
+    rows = parse_section3(md)
+    assert rows[0]["tests"] == ["FooTest.testX", "t/foo.cls::testX"]
+    assert check_traceability(rows, {"t/foo.cls": APEX})["unmapped"] == []
+    assert parse_section3(md.replace("`", "")) == rows  # the plain form reads the same
+
+
 def test_check_traceability_maps_and_flags():
     r = check_traceability(parse_section3(LEDGER), SOURCES)
     assert r["evaluated"] is True

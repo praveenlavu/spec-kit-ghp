@@ -33,18 +33,18 @@ The `project` scope (a permission of the sign-in) lets `gh` read and update your
 ## Step 2: Install `ghp`
 
 ```bash
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1
 ghp --version
 ```
 
 Expected output (the version number may differ):
 
 ```text
-ghp 0.1.0
+ghp 0.1.1
 ```
 
-No `pipx`? Run `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0` instead.
-Both install the 0.1.0 release; the `v0.1.0` tag is created when 0.1.0 is released, and until then these lines do not work.
+No `pipx`? Run `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1` instead.
+Both install the 0.1.1 release; the `v0.1.1` tag is created when 0.1.1 is released, and until then these lines do not work.
 
 ## Step 3: Create `ghp.config.json`
 
@@ -171,6 +171,11 @@ Run the command again later and it only changes what changed in `tasks.md`.
 - Open the pull request: `ghp pr create 12`, then again with `--apply`.
 
 `ghp pr create` also reads the commit messages between your base and head branch, as they are on your computer right now, and refuses a closing word such as `Closes #99` that names another issue. It cannot see commits you push later, or a merge message you edit by hand when you merge.
+
+In your AI coding agent the same steps are slash commands, such as `/speckit.ghp.pull 12`. How you type them depends on your agent and your
+Spec Kit version: with Spec Kit 1.4.0 and Claude Code they are installed as skills named with hyphens, so you type `/speckit-ghp-pull 12`
+(the dotted form is answered with "Unknown skill"). `specify extension list` shows that the extension is installed; your agent's own list of
+commands shows the spelling to type.
 
 To run the same checks on every pull request, see [CI on GitHub](ci-github.md).
 

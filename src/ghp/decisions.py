@@ -208,7 +208,7 @@ def render_line(d):
     if d["status"] == "open":
         parts = [f"- [ ] {d['id']}: {d['text']} → {_OPEN}", f"kind: {d['kind']}", f"why: {d['why']}"]
     else:
-        parts = [f"- [x] {d['id']}: {d['text']} → {d['status']}", f"by: {d['by']}", f"note: {d['note']}".rstrip()]
+        parts = [f"- [x] {d['id']}: {d['text']} → {d['status']}", f"by: {d['by']}"] + ([f"note: {d['note']}"] if d["note"] else [])  # no empty field
         if d.get("via"):
             parts.append(f"via: {d['via']}")
         if d["kind"] != "decision":  # resolving must not lose that a line was an override or assumption

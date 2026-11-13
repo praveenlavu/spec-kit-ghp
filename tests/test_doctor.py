@@ -575,6 +575,16 @@ def test_doctor_project_workflows_unknown(env):
     at(run(env[0], None, offline=True)["project-workflows"], "unknown")
 
 
+def test_a_project_github_cannot_resolve_is_said_plainly_not_as_an_unexpected_http_200(env):
+    e = GhError("E_GH_GRAPHQL", 200, "Could not resolve to a ProjectV2 with the number 3.")
+    e.graphql_errors = [("NOT_FOUND", ("user", "projectV2"))]
+    msg = at(run(env[0], good_gh(workflows=boom(e)))["project-workflows"], "unknown")
+    assert "HTTP 200" not in msg and "unexpected" not in msg and "no such Project" in msg and "Could not" not in msg  # fixed text, not GitHub's words
+    other = GhError("E_GH_GRAPHQL", 200, "something else")
+    other.graphql_errors = [("FORBIDDEN", None)]
+    assert "HTTP 200" not in at(run(env[0], good_gh(workflows=boom(other)))["project-workflows"], "unknown")
+
+
 def test_workflow_row_flags_the_two_gate_bypass_workflows(env):
     gh = good_gh(workflows=flows(enabled=ALL_FLOWS, disabled=()))
     msg = at(run(env[0], gh)["project-workflows"], "warn")

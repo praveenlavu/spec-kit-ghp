@@ -111,7 +111,7 @@ def run_live_suite(tmp_path, account, login, forbidden=CLIENT):
     fake.chmod(fake.stat().st_mode | stat.S_IXUSR)
     log = tmp_path / "gh.log"
     env = {**os.environ, "PATH": str(bin_dir) + os.pathsep + os.environ["PATH"], "GHP_LIVE": "1", "FAKE_GH_LOG": str(log), "FAKE_GH_LOGIN": login}
-    for k in ("GH_TOKEN", "GITHUB_TOKEN", "GHP_CONFIG", "GHP_FORBIDDEN_ACCOUNTS"):
+    for k in ("GH_TOKEN", "GITHUB_TOKEN", "GHP_CONFIG", "GHP_FORBIDDEN_ACCOUNTS", "GHP_LIVE_REPO"):
         env.pop(k, None)
     if forbidden is not None:
         env["GHP_FORBIDDEN_ACCOUNTS"] = forbidden
@@ -145,3 +145,40 @@ def test_no_live_test_reaches_github_without_a_forbidden_list(tmp_path):
     summary, calls = run_live_suite(tmp_path, "praveenlavu", "praveenlavu", forbidden=None)
     assert "passed" not in summary and "error" in summary, summary
     assert calls == [], calls
+
+
+def test_the_scratch_story_is_found_on_a_later_page_of_the_live_test_issues():
+    """The live fixture reads every page of `ghp:live-test` issues: here a full first page and the story on page 2."""
+    base = live.REPO_PATH + "/issues?labels=ghp:live-test&state=all&per_page=100&page=%d"
+    other = [{"number": 1000 + i, "title": "Other fictional issue %d" % i} for i in range(100)]
+    story = {"number": 19, "title": live.STORY_TITLE}
+    gh = (FakeGh().on_rest("GET", base % 1, other).on_rest("GET", base % 2, [story])
+          .on_rest("GET", live.REPO_PATH + "/issues/19/sub_issues", [{"number": 20, "title": live.SUB_TITLE}])
+          .on_rest("GET", live.REPO_PATH + "/pulls?state=all&per_page=1", [{"number": 18}]))
+    assert live.find_scratch(gh) == {"story": 19, "sub": 20, "pr": 18}
+    assert [c[2] for c in gh.calls[:2]] == [base % 1, base % 2]
+
+
+def test_the_live_repository_defaults_to_the_scratch_repo_and_only_the_owners_repos_are_accepted(no_file):
+    """GHP_LIVE_REPO picks another of the owner's repositories (`name` or `praveenlavu/name`); unset, the target is unchanged."""
+    assert live.DEFAULT_REPO == "ghp-spike-scratch"
+    assert live.live_repo({}) == live.live_repo({"GHP_LIVE_REPO": " "}) == "ghp-spike-scratch"
+    assert live.live_repo({"GHP_LIVE_REPO": "praveenlavu/ghp-live-comment"}) == "ghp-live-comment"
+    assert live.live_repo({"GHP_LIVE_REPO": "PraveenLavu/ghp-live-comment"}) == "ghp-live-comment"
+    assert live.live_repo({"GHP_LIVE_REPO": "ghp-live-comment"}) == "ghp-live-comment"
+    for bad in ("someone-else/ghp-live-comment", CLIENT + "/x", "praveenlavu/a/b", "../x", "-x", "praveenlavu/", "a b", "x;y"):
+        with pytest.raises(live.LiveRefused, match="GHP_LIVE_REPO"):
+            live.live_repo({"GHP_LIVE_REPO": bad})
+        gh = CountingViewer("praveenlavu")
+        with pytest.raises(live.LiveRefused, match="GHP_LIVE_REPO"):
+            live.require_live_account({**FORBID, "GHP_LIVE_ACCOUNT": "praveenlavu", "GHP_LIVE_REPO": bad}, gh, no_file)
+        assert gh.asked == 0, bad  # refused before any call
+
+
+def test_contributing_explains_the_live_target_repository_and_the_project_switches():
+    """The live-test notes say how to point the suite at another scratch repo and that the tests follow the Project's switches."""
+    text = " ".join((Path(live.__file__).resolve().parents[2] / "CONTRIBUTING.md").read_text(encoding="utf-8").split())
+    para = text.split("**Live target and Project switches.**", 1)[1].split("## ", 1)[0]
+    for needle in ("GHP_LIVE_REPO", "praveenlavu/ghp-live-comment", "GitHub Actions", "unset", "Auto-close issue", "Item closed",
+                   "never changes them", "ghp done"):
+        assert needle in para, needle

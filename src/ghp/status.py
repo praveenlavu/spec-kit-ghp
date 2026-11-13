@@ -35,7 +35,7 @@ import os
 import re
 
 from . import approvals, comments, decisions, dod, done, gate as gate_mod, issues, prs, projects, push, questions, rules, stack, strict, tasks
-from .config import Config, ConfigError, ConfigInvalid
+from .config import E_ORG_PROJECT, Config, ConfigError, ConfigInvalid
 from .gh import GhError, ScopeMissing
 from .refs import Ref, RefError, parse_ref
 
@@ -81,11 +81,12 @@ class Ctx:
         self.id, self.repo, self.gh, self.reason, self._memo = number, repo, gh, "", {}
         self.down = "offline" if offline or gh is None else None  # why the board is not read: offline | error | scope (Project reads only)
         self.problem = None  # config-invalid | ledger-ambiguous: the verb exits 3 (CI fails closed) after printing the report
-        self.config_state = "ok"
+        self.config_state, self.org_project = "ok", False
         try:
             self.cfg = Config.load(repo)
-        except ConfigInvalid:
+        except ConfigInvalid as e:
             self.cfg, self.config_state, self.problem = None, "invalid", "config-invalid"
+            self.org_project = E_ORG_PROJECT in str(e)  # named like every other verb names it; the rest of the text is not shown
         except ConfigError:
             self.cfg, self.config_state = None, "missing"
         self.strict_mode = self.cfg is not None and self.cfg.mode == "strict"
@@ -184,7 +185,9 @@ def _n(count, what):
 
 # ---- met(ctx): True, or False with ctx.reason set to a fixed text (else the stage's default in _WHY) ----
 def _config(c):
-    c.reason = "ghp.config.json is invalid" if c.config_state == "invalid" else "no ghp.config.json in this directory"
+    c.reason = ("no ghp.config.json in this directory" if c.config_state != "invalid" else
+                "ghp.config.json is invalid (%s: only a Project owned by a user account is supported)" % E_ORG_PROJECT if c.org_project else
+                "ghp.config.json is invalid")
     return c.cfg is not None
 
 
@@ -408,7 +411,21 @@ def _merged(c):
     return _landed(c)
 
 
-OPEN_AT_DONE = "the issue is open but its Project item is at Done: reopening an issue does not move its card, and ghp never moves a card out of Done"
+def _merged_next(c):
+    """`git fetch origin`, unless GitHub was read and every pull request of this repository tied to the issue is still open: then the merge comes first."""
+    if not strict.default_base(c.repo):
+        return "git remote set-head origin --auto"
+    try:
+        own = [p for p in c.facts()["linked"] if done._own(c.cfg, p)]
+    except _Down:
+        own = []
+    if own and not any(p["merged"] for p in own):
+        return "a person merges PR #%d on GitHub, then: git fetch origin" % own[0]["number"]
+    return "git fetch origin"
+
+
+OPEN_AT_DONE = ("the issue is open but its Project item is at Done: the card was moved to Done without closing the issue, or the issue was "
+                "reopened (reopening does not move its card); ghp never moves a card out of Done")
 
 
 def _open_at_done(c):
@@ -490,7 +507,7 @@ STAGES = [
     ("gate", False, _gate, lambda c: f"speckit.ghp.gate {c.id}"),
     ("review", False, _review, lambda c: f"speckit.ghp.review {c.id}"),
     ("pr-link", True, _pr_link, lambda c: f"speckit.ghp.pr {c.id}"),
-    ("merged", False, _merged, lambda c: "git fetch origin" if strict.default_base(c.repo) else "git remote set-head origin --auto"),
+    ("merged", False, _merged, _merged_next),
     ("done-state", True, _done_state, _done_state_next),
     ("decisions-closed", False, _decisions_closed, lambda c: f"ghp decisions {c.id}"),
     ("done", False, lambda c: True, lambda c: "none"),

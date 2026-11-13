@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
@@ -162,8 +163,9 @@ def test_unreadable_config_is_config_error_naming_file(tmp_path, monkeypatch):
 
 
 def test_removed_dod_gate_key_is_config_error(tmp_path):
-    with pytest.raises(ConfigError, match="dod_gate.*renamed.*gate.block"):
+    with pytest.raises(ConfigError, match="dod_gate.*renamed.*gate.block") as e:
         _write(tmp_path, dod_gate={"block": ["assertion"]})
+    assert not re.search(r"\b\d+\.\d+", str(e.value).split(": ", 1)[1])  # names no release (the path before it may hold digits)
 
 
 @pytest.mark.parametrize("tests,entry", [

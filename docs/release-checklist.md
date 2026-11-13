@@ -1,6 +1,6 @@
 # Release checklist
 
-Every step to release `ghp` 0.1.0, in order, with who does it. This page lists the steps, not their progress. The release is not published. The private repository already exists and `main` is pushed there; progress is written down in the [release evidence file](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/T42.md), not here.
+Every step to release `ghp` 0.1.1, in order, with who does it. This page lists the steps, not their progress; progress is written down in the [release evidence file](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/T42.md), not here.
 
 Two repositories take part. **This repository** stays private: the release commit is made and checked here. **The public repository** is created in step 10 from a fresh one-commit export of the release commit (`scripts/export_public.py` makes a new root commit, so its commit id differs from the release commit's). The tag, the GitHub release and its files belong to the public repository, and every commit after the tag is made there and repeated here; the steps from 9 on say which repository they act on.
 
@@ -9,7 +9,7 @@ Two repositories take part. **This repository** stays private: the release commi
 - **Owner** is the person who owns the repository. Only the owner makes the repository public, creates a secret or a token, adds a permission to their own sign-in, pushes a tag, or files anything with another project. These steps are marked **(owner only)**.
 - **Controller** is the coordinating session that runs the checks and makes the commits for the owner. It reads results and writes files. It never types a token, never pushes a tag, never changes who can see the repository and never files an entry with another project.
 
-The `0.1.0` tag is the owner's alone. Every step has one `Who:` line.
+The `0.1.1` tag is the owner's alone. Every step has one `Who:` line.
 
 ## Steps
 
@@ -56,7 +56,7 @@ Done for 0.1.0: the owner ran one real story from issue to Done on a test Projec
 ### 9. Put the date on the changelog
 Who: Controller
 
-Change `## 0.1.0 (unreleased)` in `CHANGELOG.md` and in `workflows/ghp-lifecycle/CHANGELOG.md` to the release date, set every `created_at` and `updated_at` in `catalog/extensions.json` and `catalog/workflows.json` to that date, and commit it. This is the release commit, in this repository. Every check below looks at it, and step 10 exports it. If any other commit is added before the tag, make the export again and run the checks again.
+Change `## 0.1.1 (unreleased)` in `CHANGELOG.md` and in `workflows/ghp-lifecycle/CHANGELOG.md` to the release date, set every `created_at` and `updated_at` in `catalog/extensions.json` and `catalog/workflows.json` to that date, and commit it. This is the release commit, in this repository. Every check below looks at it, and step 10 exports it. If any other commit is added before the tag, make the export again and run the checks again.
 
 ### 10. Run the full check with the private list and make the export (owner only)
 Who: Owner
@@ -105,43 +105,43 @@ Who: Owner
 
 Right after the public repository is made public, in its settings under Security, turn on private vulnerability reporting, so that [SECURITY.md](../SECURITY.md) tells the truth. UNVERIFIED: to the author's knowledge GitHub offers it for public repositories only. If it is already offered while the repository is private, turn it on before making the repository public. Do this before any catalog filing.
 
-### 17. Create and push the 0.1.0 tag (owner only)
+### 17. Create and push the 0.1.1 tag (owner only)
 Who: Owner
 
-In the export folder of step 10, tag its one commit `v0.1.0` and push the tag to the public repository with `git push`. It must be the exact commit the checks looked at: the export's commit, whose hosted run step 11 read, not the release commit of this repository (the export has its own root commit, so the two commit ids differ). Then make a GitHub release from it in the public repository. The catalog entries point at this release.
+In the export folder of step 10, tag its one commit `v0.1.1` and push the tag to the public repository with `git push`. It must be the exact commit the checks looked at: the export's commit, whose hosted run step 11 read, not the release commit of this repository (the export has its own root commit, so the two commit ids differ). Then make a GitHub release from it in the public repository. The catalog entries point at this release.
 
 ### 18. Build the extension file and the bundle file
 Who: Controller
 
-In a clean checkout of the `v0.1.0` tag of the public repository, build both files into one new folder outside the repository:
+In a clean checkout of the `v0.1.1` tag of the public repository, build both files into one new folder outside the repository:
 
-1. `python3 scripts/build_extension_zip.py <dir>` writes `spec-kit-ghp-extension-0.1.0.zip`. Run it twice: the two files must be byte for byte the same. That holds for one Python and zlib build, not across machines: compare the two files from one machine.
+1. `python3 scripts/build_extension_zip.py <dir>` writes `spec-kit-ghp-extension-0.1.1.zip`. Run it twice: the two files must be byte for byte the same. That holds for one Python and zlib build, not across machines: compare the two files from one machine.
 2. `specify bundle validate --path bundle` must pass.
-3. `specify bundle build --path bundle --output <dir>` writes `ghp-0.1.0.zip`.
+3. `specify bundle build --path bundle --output <dir>` writes `ghp-0.1.1.zip`.
 
 The two names must differ; `tests/test_catalog.py` checks the extension's name against the bundle's.
 
 ### 19. Write the checksums file
 Who: Controller
 
-In that folder, run `shasum -a 256 spec-kit-ghp-extension-0.1.0.zip ghp-0.1.0.zip > SHA256SUMS`. Keep the folder: the next step attaches these three files.
+In that folder, run `shasum -a 256 spec-kit-ghp-extension-0.1.1.zip ghp-0.1.1.zip > SHA256SUMS`. Keep the folder: the next step attaches these three files.
 
 ### 20. Attach the extension archive and the bundle file to the release (owner only)
 Who: Owner
 
-Attach the three files of the last two steps to the GitHub release: `spec-kit-ghp-extension-0.1.0.zip` (the address in `catalog/extensions.json`), `ghp-0.1.0.zip` (the bundle file) and `SHA256SUMS`. Do not use GitHub's automatic archive of the tag: its bytes are not promised to stay the same, and step 22 takes the checksum it adds to `catalog/extensions.json` on `main` from the file attached here.
+Attach the three files of the last two steps to the GitHub release: `spec-kit-ghp-extension-0.1.1.zip` (the address in `catalog/extensions.json`), `ghp-0.1.1.zip` (the bundle file) and `SHA256SUMS`. Do not use GitHub's automatic archive of the tag: its bytes are not promised to stay the same, and step 22 takes the checksum it adds to `catalog/extensions.json` on `main` from the file attached here.
 
 ### 21. Check that every catalog address answers
 Who: Controller
 
-With the owner's go, ask each address for its headers, without signing in: `curl -sSIL -o /dev/null -w '%{http_code}\n' <address>`. Each must end with `200`: the extension file and the bundle file under `releases/download/v0.1.0/`, the raw workflow file, the two catalog files (`catalog_url` in each), and the documentation and changelog addresses of both entries and of the bundle. Write the list and the answers in the evidence file.
+With the owner's go, ask each address for its headers, without signing in: `curl -sSIL -o /dev/null -w '%{http_code}\n' <address>`. Each must end with `200`: the extension file and the bundle file under `releases/download/v0.1.1/`, the raw workflow file, the two catalog files (`catalog_url` in each), and the documentation and changelog addresses of both entries and of the bundle. Write the list and the answers in the evidence file.
 
 ### 22. Add the checksum of the release file
 Who: Controller
 
 With the owner's go to download it, take the SHA-256 of the extension file attached in step 20 and add it to `catalog/extensions.json` as `sha256`, in a new commit on `main` of the public repository, made in the export folder; the owner pushes it. Make the same change in a commit on `main` of this repository too, so the two trees still differ only by the internal working notes. It must equal its line in `SHA256SUMS`. The address must stay a `releases/download` address, never the tag archive. `tests/test_catalog.py` accepts a checksum only in that form. Do not move the tag.
 
-The checksum goes only into the entry filed upstream (step 26) and into `catalog/extensions.json` on `main`. Owner decision: serve each `catalog_url` from `main`, including the bundle page's `catalog add` lines and the installs of step 23, so installers receive the checksum after this commit. The catalog snapshot served from the `v0.1.0` tag carries no checksum; do not move the tag.
+The checksum goes only into the entry filed upstream (step 26) and into `catalog/extensions.json` on `main`. Owner decision: serve each `catalog_url` from `main`, including the bundle page's `catalog add` lines and the installs of step 23, so installers receive the checksum after this commit. The catalog snapshot served from the `v0.1.1` tag carries no checksum; do not move the tag.
 
 The same commit flips the pins of `tests/test_catalog.py::test_what_is_not_known_yet_is_marked_and_nothing_is_invented`: `"sha256" not in` the extension entry, no 64-hex string in `docs/catalog-submission.md`, and its "add `sha256` once the release file exists" note. Put the checksum in that page's Proposed Catalog Entry too: `test_extension_form_values_are_the_manifests` requires it to equal the catalog entry.
 
@@ -152,8 +152,8 @@ Do this once with Spec Kit 1.2.1 (the oldest supported) and once with the newest
 
 1. The extension from its download address: `specify extension add ghp --from <download address>`; `specify extension list` must show 13 commands and 2 hooks.
 2. The workflow from the raw workflow address: `specify workflow add <raw workflow address>`, then `specify workflow info ghp-lifecycle`.
-3. The two component catalogs as in [the bundle page](https://github.com/praveenlavu/spec-kit-ghp/blob/main/bundle/README.md), then a pinned install of each part: `specify extension add ghp --version 0.1.0` and `specify workflow add ghp-lifecycle --version 0.1.0`. This is the check that the catalog's `requires` equals the workflow file's.
-4. The bundle from the attached file: `specify bundle install ./ghp-0.1.0.zip`, in another new project with the two catalogs added.
+3. The two component catalogs as in [the bundle page](https://github.com/praveenlavu/spec-kit-ghp/blob/main/bundle/README.md), then a pinned install of each part: `specify extension add ghp --version 0.1.1` and `specify workflow add ghp-lifecycle --version 0.1.1`. This is the check that the catalog's `requires` equals the workflow file's.
+4. The bundle from the attached file: `specify bundle install ./ghp-0.1.1.zip`, in another new project with the two catalogs added.
 
 Write each command, the Spec Kit version and the result in the evidence file.
 
@@ -175,4 +175,4 @@ From the owner's own account, file the three entries with the Spec Kit project (
 ### 27. Run the ready-made workflows in another repository (owner only)
 Who: Owner
 
-After step 15, in a separate test repository of the owner's own account, call the four reusable workflows of [CI on GitHub](ci-github.md) from the public repository at the `v0.1.0` tag, on GitHub's hosted runners: a passing gate, a failing one with its message, a pull request whose own config file is ignored, and the warning case. Run the link-on-merge workflow once without the `GHP_PROJECT_TOKEN` secret and once with it; only the owner creates that secret. Until this runs, the ready-made workflows stay marked "not yet run in another repository". The controller writes the run links and the results in the [consumer run evidence file](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/T39.md).
+After step 15, in a separate test repository of the owner's own account, call the four reusable workflows of [CI on GitHub](ci-github.md) from the public repository at the `v0.1.1` tag, on GitHub's hosted runners: a passing gate, a failing one with its message, a pull request whose own config file is ignored, and the warning case. Run the link-on-merge workflow once without the `GHP_PROJECT_TOKEN` secret and once with it; only the owner creates that secret. Until a case has run there, the docs list it as "not run there yet". The controller writes the run links and the results in the [consumer run evidence file](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/T39.md).

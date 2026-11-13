@@ -1,12 +1,12 @@
 # Catalog submission (DRAFT)
 
 **DRAFT. Nothing is filed with Spec Kit.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
-Whether to publish is the owner's decision, and it has not been made. The release `v0.1.0` exists, and the addresses below were installed from it (see the Testing Details of each form).
-Boxes are ticked only for what was done against the published release; every box left empty is a judgement for the person filing.
+Whether to publish is the owner's decision, and it has not been made. The release `v0.1.0` exists, and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.1; the same installs are re-run on the `v0.1.1` release after it exists.
+Boxes are ticked only for what was done against the published 0.1.0 release; every box left empty is a judgement for the person filing.
 
 **Two different numbers.** The catalog entry counts the extension's **slash commands**, from `extension.yml`: 13 commands (`speckit.ghp.*`) and 2 hooks. The `ghp` program is a separate thing with 21 commands of its own (`ghp --help`); those are not counted in any form.
 
-**Two different files on the release.** The extension file is `spec-kit-ghp-extension-0.1.0.zip`, made by `python3 scripts/build_extension_zip.py <dir>`. The bundle file is `ghp-0.1.0.zip`, made by `specify bundle build` (its name is always the bundle id and its version). Both are attached to the `v0.1.0` release.
+**Two different files on the release.** The extension file is `spec-kit-ghp-extension-0.1.1.zip`, made by `python3 scripts/build_extension_zip.py <dir>`. The bundle file is `ghp-0.1.1.zip`, made by `specify bundle build` (its name is always the bundle id and its version). Both are attached to the `v0.1.1` release.
 
 **Where each one is filed.** The extension and the bundle go through issue forms in `github/spec-kit` ("Extension Submission" and "Bundle Submission"). A workflow has no issue form: it is a pull request that adds the entry to `workflows/catalog.community.json`, as Spec Kit's workflow publishing guide says. Every value below is copied from `extension.yml`, `workflows/ghp-lifecycle/workflow.yml`, `bundle/bundle.yml` or the catalog files; `tests/test_catalog.py` fails when one drifts.
 
@@ -23,7 +23,7 @@ Boxes are ticked only for what was done against the published release; every box
 | `catalog/workflows.json` | The catalog entry for the `ghp-lifecycle` workflow, copied from `workflows/ghp-lifecycle/workflow.yml`, with the same `requires` block (Spec Kit refuses a pinned install whose downloaded `requires` differs). |
 | `bundle/bundle.yml` and `bundle/README.md` | One bundle that installs the extension and the workflow together, each pinned to its version, and the page that explains it. |
 
-The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. The extension entry carries the SHA-256 of the file attached to the release (the same value as its line in `SHA256SUMS`). The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the release date, 2026-11-12, the same as the changelog.
+The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. The extension entry gets the SHA-256 of the file attached to the release (the same value as its line in `SHA256SUMS`) once that file exists. The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the release date, 2026-11-12, the same as the changelog.
 
 ## 1. Extension submission
 
@@ -32,15 +32,15 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 | Issue title | `[Extension]: Add ghp` |
 | Extension ID | `ghp` |
 | Extension Name | `Spec Kit for GitHub Projects - human-gated lifecycle` |
-| Version | `0.1.0` |
+| Version | `0.1.1` |
 | Description | `GitHub issue to Done through Spec Kit, with a human sign-off before every write.` |
 | Author | `praveenlavu` |
 | Repository URL | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/spec-kit-ghp-extension-0.1.0.zip` |
+| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip` |
 | License | `MIT` |
 | Homepage | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/README.md` |
-| Changelog URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/CHANGELOG.md` |
+| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md` |
+| Changelog URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md` |
 | Required Spec Kit Version | `>=1.2.1` |
 | Number of Commands | `13` |
 | Number of Hooks | `2` |
@@ -49,7 +49,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 **Required Tools**
 
 ```markdown
-- ghp (>=0.1.0) - required; the command-line program from this repository: pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.0
+- ghp (>=0.1.1) - required; the command-line program from this repository: pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
 - git - required
 - gh - required; every GitHub call goes through the GitHub CLI, signed in with the project scope
 ```
@@ -86,7 +86,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 - [x] All command files exist and are properly formatted
 - [x] Extension ID follows naming conventions (lowercase-with-hyphens)
 
-**Testing Details** (from what was run against the release on 2026-11-12)
+**Testing Details** (from what was run against the 0.1.0 release on 2026-11-12; the same installs are re-run on 0.1.1 after its release)
 
 ```markdown
 **Tested on:**
@@ -106,15 +106,15 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 
 ```bash
 # Install the program and the extension
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.0
-specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/spec-kit-ghp-extension-0.1.0.zip
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
+specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip
 
 # Connect, then pull a story
 ghp setup
 /speckit.ghp.pull 42
 ```
 
-**Proposed Catalog Entry** (the entry of `catalog/extensions.json`)
+**Proposed Catalog Entry** (the entry of `catalog/extensions.json`; add `sha256` once the release file exists)
 
 ```json
 {
@@ -123,20 +123,19 @@ ghp setup
     "name": "Spec Kit for GitHub Projects - human-gated lifecycle",
     "description": "GitHub issue to Done through Spec Kit, with a human sign-off before every write.",
     "author": "praveenlavu",
-    "version": "0.1.0",
-    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/spec-kit-ghp-extension-0.1.0.zip",
-    "sha256": "13fe65325bae49e8c25e11b40d91f5a94a281ebc6673e48314054ba0e2637837",
+    "version": "0.1.1",
+    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
-    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/README.md",
-    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/CHANGELOG.md",
+    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md",
+    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md",
     "license": "MIT",
     "requires": {
       "speckit_version": ">=1.2.1",
       "tools": [
         {
           "name": "ghp",
-          "version": ">=0.1.0",
+          "version": ">=0.1.1",
           "required": true
         },
         {
@@ -185,9 +184,9 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 | Branch | `add-ghp-lifecycle` |
 | Workflow ID | `ghp-lifecycle` |
 | Workflow Name | `GitHub issue lifecycle` |
-| Version | `0.1.0` |
+| Version | `0.1.1` |
 | Repository | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Raw workflow URL | `https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.0/workflows/ghp-lifecycle/workflow.yml` |
+| Raw workflow URL | `https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.1/workflows/ghp-lifecycle/workflow.yml` |
 
 **Catalog entry** (the entry of `catalog/workflows.json`)
 
@@ -198,11 +197,11 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
     "name": "GitHub issue lifecycle",
     "description": "GitHub story issue to an open PR: spec, plan, tasks, push, implement, gate, review, PR. Every GitHub write is preview, human gate, apply. The story closes after merge.",
     "author": "praveenlavu",
-    "version": "0.1.0",
-    "url": "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.0/workflows/ghp-lifecycle/workflow.yml",
+    "version": "0.1.1",
+    "url": "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.1/workflows/ghp-lifecycle/workflow.yml",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
-    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/workflows/ghp-lifecycle/README.md",
-    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/workflows/ghp-lifecycle/CHANGELOG.md",
+    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/workflows/ghp-lifecycle/README.md",
+    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/workflows/ghp-lifecycle/CHANGELOG.md",
     "license": "MIT",
     "requires": {
       "speckit_version": ">=1.2.1",
@@ -233,7 +232,7 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 
 **Workflow Name**: GitHub issue lifecycle
 **Workflow ID**: ghp-lifecycle
-**Version**: 0.1.0
+**Version**: 0.1.1
 **Repository**: https://github.com/praveenlavu/spec-kit-ghp
 
 ### Checklist
@@ -258,13 +257,13 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 | Issue title | `[Bundle]: Add ghp` |
 | Bundle ID | `ghp` |
 | Bundle Name | `Spec Kit for GitHub Projects` |
-| Version | `0.1.0` |
+| Version | `0.1.1` |
 | Role or Team | `developer` |
 | Description | `The ghp extension and the ghp-lifecycle workflow together: GitHub issue to Done through Spec Kit, with a human sign-off before every write.` |
 | Author | `praveenlavu` |
 | Repository URL | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip` |
-| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/bundle/README.md` |
+| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip` |
+| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/bundle/README.md` |
 | License | `MIT` |
 | Required Spec Kit Version | `>=1.2.1` |
 | Integration Target | leave empty: the bundle pins no integration |
@@ -273,8 +272,8 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 **Components Provided**
 
 ```markdown
-- extensions: ghp@0.1.0
-- workflows: ghp-lifecycle@0.1.0
+- extensions: ghp@0.1.1
+- workflows: ghp-lifecycle@0.1.1
 ```
 
 **Required Component Catalogs**
@@ -288,7 +287,7 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 
 ```markdown
 - Installs the ghp extension (13 slash commands, 2 hooks) and the ghp-lifecycle workflow in one step
-- Both parts pinned to 0.1.0, the same version as the ghp program they call
+- Both parts pinned to 0.1.1, the same version as the ghp program they call
 - Every GitHub write in the workflow is a preview, a gate, then an apply
 ```
 
@@ -311,7 +310,7 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 - [x] Bundle ID matches the manifest and follows naming conventions
 - [x] Every extension, preset, workflow, and step reference is pinned where the manifest requires a version
 
-**Testing Details** (from what was run against the release on 2026-11-12)
+**Testing Details** (from what was run against the 0.1.0 release on 2026-11-12; the same installs are re-run on 0.1.1 after its release)
 
 ```markdown
 **Tested on:**
@@ -332,15 +331,15 @@ The end-to-end run was made once, in terminal mode only, on a private test repos
 
 ```bash
 # The program the extension and the workflow call
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.0
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
 
 # The two component catalogs
 specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed
 specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp
 
 # The bundle file
-curl -L -o ghp-0.1.0.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip
-specify bundle install ./ghp-0.1.0.zip
+curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip
+specify bundle install ./ghp-0.1.1.zip
 
 # Run one story
 specify workflow run ghp-lifecycle -i issue_number=42
@@ -353,12 +352,12 @@ specify workflow run ghp-lifecycle -i issue_number=42
   "ghp": {
     "id": "ghp",
     "name": "Spec Kit for GitHub Projects",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "role": "developer",
     "description": "The ghp extension and the ghp-lifecycle workflow together: GitHub issue to Done through Spec Kit, with a human sign-off before every write.",
     "author": "praveenlavu",
     "license": "MIT",
-    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip",
+    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "requires": {
       "speckit_version": ">=1.2.1"
@@ -381,9 +380,9 @@ specify workflow run ghp-lifecycle -i issue_number=42
 
 ## What happens when someone files them
 
-Step 1 is done; nothing has been filed. In order:
+Step 1 was done for 0.1.0 and is repeated for 0.1.1 after its release; nothing has been filed. In order:
 
-1. The repository is public, the `v0.1.0` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
+1. The repository is public, the `v0.1.1` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
 2. The extension is filed through Spec Kit's extension submission issue form, with the values in section 1. Spec Kit's guide says not to edit the catalog file with a pull request for an extension.
 3. The workflow is filed as a pull request, with the values in section 2.
 4. The bundle is filed through Spec Kit's bundle submission issue form, with the values in section 3.
@@ -393,9 +392,9 @@ Step 1 is done; nothing has been filed. In order:
 
 - **The catalog format.** The entries and the form fields follow the catalog files, publishing guides and issue forms in a copy of Spec Kit's repository kept on the author's machine. They were not compared with the live repository, which may have changed since.
 - **How each entry is filed.** The issue-form route for extensions, the pull-request route for workflows and the issue-form route for bundles come from the same copy of the guides. They have not been checked against the live repository.
-- **The release file.** Checked: the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address and the two catalog addresses all answer, and the file matches its checksum. Not checked: the catalogs as served to someone who has them cached for a long time.
-- **Installing from the release.** `specify extension add` from the release file and `specify workflow add` from the raw workflow address were run on Spec Kit 1.2.1 and 1.4.0. `specify extension add --from` stops at a trust question when no one is at the terminal; it was answered yes.
-- **The bundle.** Validated, built from a clean clone of the tag, installed from the release file and installed by its id from a local catalog, on both versions. Not checked: a bundle catalog served over the network (the local one used a `file://` address).
+- **The release file.** Checked on the 0.1.0 release: the download address (a file attached to the release, not GitHub's automatic archive of the tag), the raw workflow address and the two catalog addresses all answer, and the file matches its checksum. Not checked: the catalogs as served to someone who has them cached for a long time.
+- **Installing from the release.** `specify extension add` from the release file and `specify workflow add` from the raw workflow address were run with the 0.1.0 release on Spec Kit 1.2.1 and 1.4.0. `specify extension add --from` stops at a trust question when no one is at the terminal; it was answered yes.
+- **The bundle.** For 0.1.0: validated, built from a clean clone of the tag, installed from the release file and installed by its id from a local catalog, on both versions. Not checked: a bundle catalog served over the network (the local one used a `file://` address).
 - **The bundle file and its catalogs.** The two component catalogs are served from `main`, so a change there reaches installers without a new tag.
 - **Optional fields.** The entry has no category or effect. Some entries in the catalog have them, and the maintainers may add or ask for them.
 - **The bundle role.** The role text `developer` is a choice, copied from an example in Spec Kit's own catalog.
@@ -426,7 +425,7 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 - **A write that fails with a server error.** Whether a write that GitHub answers with a server error may still have happened.
 - **A write that ends with a 1xx or 3xx status.** How such an answer to a write behaves.
 - **The automation's actor name.** That GitHub's board automation always shows as `github-project-automation` (seen, not documented).
-- **Automation delay at Done.** How long the board automation can take; `ghp done` waits up to 30 seconds.
+- **Automation delay at Done.** How long the board automation can take; `ghp done` waits about 30 seconds, plus the time of the reads (about 35 seconds in the live runs), for the board automation before it sets Done itself.
 - **Issue forms.** How GitHub's issue forms render the text `ghp` reads.
 - **Attachments.** Whether any API for file attachments exists (none was found).
 - **Bodies typed in the web editor.** How GitHub's web editor stores text you type or paste there.
@@ -443,6 +442,6 @@ These are the same items as the "Unverified in live runs" list on the [trust pag
 - **An open pull request in the closing references.** That GitHub lists an open pull request with `Closes #12` as a closing reference before it is merged.
 - **A closer commit in a fork network.** Which repository GitHub reports for a closing commit that came from a fork.
 - **Fork and other-repository refusals of `ghp done`.** `ghp done` refuses a pull request named with `--pr` that comes from a fork or belongs to another repository, and a story closed by a commit of another repository; those refusals have not run against real GitHub.
-- **Board and strict checks on GitHub and Actions.** The board check, `strict verify` and `strict check` on real GitHub and in Actions.
-- **The reusable workflows in a consumer repository.** The four ready-made workflows have not yet run in another repository on GitHub's hosted runners. Still unverified there: the read-only token of a pull request from a fork, the re-run when a pull request's target branch is changed (the `edited` event), and how the optional secret reaches the job.
+- **Board and strict checks on GitHub and Actions.** The board check and `strict check` on real GitHub and in Actions. `strict verify` ran once in Actions in another repository, on a pull request where it failed; a passing run in Actions has not been tried.
+- **The reusable workflows in a consumer repository.** The four ready-made workflows have run once in another repository on GitHub's hosted runners, pinned to the 0.1.0 release commit, by an AI agent on a public test repository: a passing gate, a failing gate, a pull request whose own config file is ignored, and link-on-merge without the `GHP_PROJECT_TOKEN` secret. Not run there: link-on-merge with that secret, a merge into a branch other than the default one, pull requests from forks (and their read-only token), a private consumer repository, and the re-run when a pull request's target branch is changed (the `edited` event).
 - **The Spec Kit minimum version.** The installs were run on Spec Kit 1.2.1 and 1.4.0. The contract tests and the live lifecycle run used 1.2.4.dev0 only, so running the workflow on 1.2.1 or 1.4.0 has not been tried.

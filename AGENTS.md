@@ -65,7 +65,7 @@ These are a summary of `rules/hitl.md`.
 Run `ghp --version`. If it is missing, tell the user to install it:
 
 ```bash
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.0
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1
 ```
 
 If `pipx` is missing the user can run `python3 -m pip install --user pipx && python3 -m pipx ensurepath`.

@@ -34,14 +34,14 @@ def test_help_lists_exactly_the_registered_verbs(capsys):
 
 def test_version_flag(capsys):
     assert cli.main(["--version"]) == 0
-    assert capsys.readouterr().out == "ghp 0.1.0\n"
+    assert capsys.readouterr().out == "ghp 0.1.1\n"
 
 
 def test_version_flag_via_module():
     env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parent.parent / "src"))
     r = subprocess.run([sys.executable, "-m", "ghp", "--version"],
                        capture_output=True, text=True, env=env)
-    assert (r.returncode, r.stdout) == (0, "ghp 0.1.0\n")
+    assert (r.returncode, r.stdout) == (0, "ghp 0.1.1\n")
 
 
 # ---- the frame: test-only verbs are put in the registry by the tests (monkeypatch), never shipped ----

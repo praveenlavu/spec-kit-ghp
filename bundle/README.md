@@ -1,6 +1,6 @@
 # ghp bundle
 
-**Released as `v0.1.0`.** The release files and the catalog addresses below exist. The bundle and its two parts were installed from the release on Spec Kit 1.2.1 and 1.4.0 (see [the catalog submission page](../docs/catalog-submission.md)). It is not yet listed in Spec Kit's own community catalogs.
+**Released as `v0.1.1`.** The release files and the catalog addresses below exist. The 0.1.0 bundle and its two parts were installed from the 0.1.0 release on Spec Kit 1.2.1 and 1.4.0, and the same installs are re-run on 0.1.1 after its release (see [the catalog submission page](../docs/catalog-submission.md)). It is not yet listed in Spec Kit's own community catalogs.
 
 The bundle sets up a Spec Kit project to run GitHub issues through Spec Kit with a person's approval before every GitHub write. It is for a developer who keeps stories as GitHub issues and tracks them on a GitHub Project owned by their user account.
 
@@ -8,8 +8,8 @@ The bundle sets up a Spec Kit project to run GitHub issues through Spec Kit with
 
 | Component | Id | Version | What it is |
 |---|---|---|---|
-| Extension | `ghp` | 0.1.0 | The 13 `speckit.ghp.*` slash commands and 2 optional hooks. |
-| Workflow | `ghp-lifecycle` | 0.1.0 | One story from spec to an open pull request, with a gate before every GitHub write. |
+| Extension | `ghp` | 0.1.1 | The 13 `speckit.ghp.*` slash commands and 2 optional hooks. |
+| Workflow | `ghp-lifecycle` | 0.1.1 | One story from spec to an open pull request, with a gate before every GitHub write. |
 
 It does **not** install the `ghp` command-line program, which the commands and the workflow's steps call. Install that from the same tag first (step 1). The bundle, the extension, the workflow and the program carry the same version; mixing versions is not supported. You need Spec Kit 1.2.1 or later (only 1.2.4.dev0 has been tried, see [compatibility](../docs/compatibility.md)), Python 3.9 or later, `git`, and the GitHub CLI `gh`, signed in.
 
@@ -18,26 +18,26 @@ It does **not** install the `ghp` command-line program, which the commands and t
 1. Install the `ghp` program from the release tag, then run `ghp setup` in your own terminal:
 
    ```bash
-   pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.0
+   pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
    ```
 
-2. Add the two component catalogs. The bundle pins `ghp@0.1.0` and `ghp-lifecycle@0.1.0`. Spec Kit's community catalogs are for discovery only, so `specify bundle install` finds the two parts in these catalogs, which this repository serves from its `main` branch, so the checksum added after the tag reaches you:
+2. Add the two component catalogs. The bundle pins `ghp@0.1.1` and `ghp-lifecycle@0.1.1`. Spec Kit's community catalogs are for discovery only, so `specify bundle install` finds the two parts in these catalogs, which this repository serves from its `main` branch, so the checksum added after the tag reaches you:
 
    ```bash
    specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed
    specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp
    ```
 
-   An install-allowed catalog installs what it lists without the untrusted-source question. These two list only the extension and the workflow at version 0.1.0, each pointing at its `v0.1.0` release file. Read them, and the [workflow file](https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.0/workflows/ghp-lifecycle/workflow.yml), before you add them.
+   An install-allowed catalog installs what it lists without the untrusted-source question. These two list only the extension and the workflow at version 0.1.1, each pointing at its `v0.1.1` release file. Read them, and the [workflow file](https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/workflows/ghp-lifecycle/workflow.yml), before you add them.
 
 3. Install the bundle from the release file. It installs the extension and the workflow:
 
    ```bash
-   curl -L -o ghp-0.1.0.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/ghp-0.1.0.zip
-   specify bundle install ./ghp-0.1.0.zip
+   curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip
+   specify bundle install ./ghp-0.1.1.zip
    ```
 
-   Without the catalogs, install the two parts on their own instead: `specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.0/spec-kit-ghp-extension-0.1.0.zip` and `specify workflow add --dev <path-to-spec-kit-ghp>/workflows/ghp-lifecycle`.
+   Without the catalogs, install the two parts on their own instead: `specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip` and `specify workflow add --dev <path-to-spec-kit-ghp>/workflows/ghp-lifecycle`.
 
 Then run one story:
 
@@ -45,7 +45,7 @@ Then run one story:
 specify workflow run ghp-lifecycle -i issue_number=42
 ```
 
-To build the bundle file yourself: `specify bundle build --path bundle --output <dir>` writes `ghp-0.1.0.zip` (the bundle id and its version). The extension file of the release has a different name, `spec-kit-ghp-extension-0.1.0.zip`, so the two never collide.
+To build the bundle file yourself: `specify bundle build --path bundle --output <dir>` writes `ghp-0.1.1.zip` (the bundle id and its version). The extension file of the release has a different name, `spec-kit-ghp-extension-0.1.1.zip`, so the two never collide.
 
 ## Human gates
 

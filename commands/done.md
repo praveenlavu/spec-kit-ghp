@@ -69,8 +69,14 @@ ghp done <n> --apply --expect-plan .ghp/plan-done.md
 The CLI re-renders the plan and compares it with the file the user approved. If they differ
 (exit 2, `plan changed since approval`), nothing was written and the current plan is in
 `.ghp/plan-done.md.new`: preview again (step 1) and ask again.
+Running `git fetch origin` between the preview and the apply changes the plan (it decides whether the ledger at the merge commit can be
+read here), so the apply is refused and the preview must be shown and approved again.
 In `approval: "comment"` mode the apply also needs a trusted approver's `/approve approve-done <hash>` comment for this exact plan (and the pins of
 the earlier steps): on exit 2 nothing was written; show the human the refusal and wait, never post it yourself (`rules/hitl.md`).
+Closing also needs that approval to be pinned. Once the approver's comment is there, run `ghp approvals check <n> --gate approve-done` (a read;
+it hashes `.ghp/plan-done.md`, so the preview must be written there) and then the apply above. The check exits 2 and pins nothing unless the
+comment counts: an approver's, unedited, for this exact plan, newer than any approval request, and with no newer `/reject` or malformed approver
+line after it. The approver must be a different account from the one `ghp` runs as: a comment by that account (yours) never counts.
 
 ### 4. Report
 

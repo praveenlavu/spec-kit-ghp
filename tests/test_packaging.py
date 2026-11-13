@@ -60,7 +60,7 @@ def test_install_into_clean_venv_adds_only_the_package():
         script = py.parent / ("ghp.exe" if os.name == "nt" else "ghp")
         out = subprocess.run([str(script), "--version"], check=True,
                              capture_output=True, text=True).stdout
-        assert out == "ghp 0.1.0\n"
+        assert out == "ghp 0.1.1\n"
 
 
 def test_wheel_contains_seeds_and_golden():

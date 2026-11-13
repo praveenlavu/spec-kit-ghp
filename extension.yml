@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "ghp"
   name: "Spec Kit for GitHub Projects - human-gated lifecycle"
-  version: "0.1.0"
+  version: "0.1.1"
   description: "GitHub issue to Done through Spec Kit, with a human sign-off before every write."
   author: "praveenlavu"
   repository: "https://github.com/praveenlavu/spec-kit-ghp"
@@ -15,7 +15,7 @@ requires:
   # Spec Kit only checks that each tool is on PATH, not its version; the ghp package carries the same version as this extension.
   tools:
     - name: "ghp"
-      version: ">=0.1.0"
+      version: ">=0.1.1"
       required: true
     - name: "git"
       required: true

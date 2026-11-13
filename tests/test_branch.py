@@ -140,6 +140,14 @@ def test_the_title_comes_from_the_ledger_when_no_title_is_given(repo, capsys):
     assert run(capsys, title=None)[1]["branch"] == "feature/gh2-issue"  # no ledger: a fixed word, still no network
 
 
+def test_a_preview_without_a_title_says_the_name_is_not_final(repo, capsys):
+    _, out = run(capsys, title=None)  # no ledger yet: the slug is the fallback word, not the issue's title
+    assert out["branch"] == "feature/gh2-issue" and out["final"] is False and "ghp dod 2" in out["note"]
+    assert "final" not in run(capsys)[1]  # with a title the name is the one step 4a uses
+    git(repo, "checkout", "-q", "-b", "feature/gh2-old")
+    assert "final" not in run(capsys, title=None)[1]  # an existing branch is found by its number: final whatever the title
+
+
 def test_a_ledger_that_is_a_symlink_is_not_read(repo, capsys):
     (repo / "dod").mkdir()
     (repo.parent / (repo.name + "-t.md")).write_text("# DoD — #2: Leaked title\n")

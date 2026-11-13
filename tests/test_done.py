@@ -415,6 +415,74 @@ def test_a_closed_issue_with_no_merged_pr_has_a_comment_without_a_link(tmp_path,
     assert "no merge commit was found" in hub.ledger_comments()[0]["body"] and "blob/" not in hub.ledger_comments()[0]["body"]
 
 
+def _merged(tmp_path, marks, text=None):
+    """A git repo whose one commit holds the ledger with `marks`; returns its id (the merge commit the comment links)."""
+    import subprocess
+
+    def git(*a):
+        return subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@example.invalid", *a],
+                              check=True, capture_output=True, text=True).stdout.strip()
+    git("init", "-q")
+    (tmp_path / LEDGER).write_text(text or ledger(*marks), encoding="utf-8")
+    git("add", LEDGER)
+    git("commit", "-q", "-m", "ledger")
+    return git("rev-parse", "HEAD")
+
+
+def test_the_comment_says_when_the_linked_ledger_lacks_the_ticks(tmp_path, monkeypatch, capsys):
+    repo(tmp_path, monkeypatch)
+    oid = _merged(tmp_path, (" ", " "))  # merged unticked
+    (tmp_path / LEDGER).write_text(ledger("x", "x"), encoding="utf-8")  # ticked after the merge, not committed
+    hub = DoneHub(linked=[pull(oid=oid)])
+    code, out, _ = run(hub, capsys)
+    assert code == 0 and "blob/" + oid in out
+    assert "The linked file at the merge commit has 0 of 2 ticked" in out  # in the comment the reader sees next to the link
+    assert "warning: the ledger at merge commit %s has 0 of 2 boxes ticked" % oid[:12] in out
+
+
+def test_the_comment_has_no_note_when_the_linked_ledger_is_the_one_counted(tmp_path, monkeypatch, capsys):
+    repo(tmp_path, monkeypatch)
+    oid = _merged(tmp_path, ("x", "x"))
+    hub = DoneHub(linked=[pull(oid=oid)])
+    code, out, _ = run(hub, capsys)
+    assert code == 0 and "blob/" + oid in out and "The linked file" not in out and "warning: the ledger" not in out
+
+
+def _with_acs(n, marks):
+    return "### Acceptance criteria\n" + "".join("- criterion %d\n" % i for i in range(1, n + 1)) + "\n" + ledger(*marks)
+
+
+def test_a_different_ac_count_with_the_same_boxes_gives_no_note(tmp_path, monkeypatch, capsys):
+    repo(tmp_path, monkeypatch)
+    oid = _merged(tmp_path, (), _with_acs(2, ("x", "x")))
+    (tmp_path / LEDGER).write_text(_with_acs(3, ("x", "x")), encoding="utf-8")  # one more criterion after the merge, the same 2 of 2 boxes
+    assert done.check(_with_acs(3, ("x", "x")))["acs"] != done.check(_with_acs(2, ("x", "x")))["acs"]
+    code, out, _ = run(DoneHub(linked=[pull(oid=oid)]), capsys)
+    assert code == 0 and "blob/" + oid in out and "The linked file" not in out and "warning: the ledger" not in out
+
+
+def test_a_merge_commit_that_cannot_be_read_is_not_called_missing(tmp_path, monkeypatch, capsys):
+    repo(tmp_path, monkeypatch)
+    _merged(tmp_path, ("x", "x"))
+    code, out, _ = run(DoneHub(linked=[pull(oid=OID)]), capsys)  # OID is not in this repository
+    assert code == 0 and "warning: the ledger at merge commit %s could not be read here" % OID[:12] in out
+    assert "does not hold this file" not in out and "has no ledger file" not in out
+
+
+def test_a_merge_commit_without_the_ledger_is_named_in_the_comment(tmp_path, monkeypatch, capsys):
+    import subprocess
+    repo(tmp_path, monkeypatch)
+    git = ["git", "-C", str(tmp_path), "-c", "user.name=t", "-c", "user.email=t@example.invalid"]
+    subprocess.run(git + ["init", "-q"], check=True)
+    (tmp_path / "other.txt").write_text("x")
+    subprocess.run(git + ["add", "other.txt"], check=True)
+    subprocess.run(git + ["commit", "-qm", "no ledger"], check=True)
+    oid = subprocess.run(git + ["rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+    code, out, _ = run(DoneHub(linked=[pull(oid=oid)]), capsys)
+    assert code == 0 and "The linked merge commit does not hold this file" in out
+    assert "warning: merge commit %s has no ledger file" % oid[:12] in out and "could not be read here" not in out
+
+
 def test_the_issue_closed_between_the_plan_and_the_write_is_not_closed_again(tmp_path, monkeypatch, capsys):
     repo(tmp_path, monkeypatch)
     hub = DoneHub()
@@ -945,7 +1013,7 @@ def test_the_digest_covers_every_field_it_is_given():
     assert re.fullmatch(r"[0-9a-f]{64}", done._digest(base))
     for key, other in (("comment", "e"), ("comment_id", 5), ("merge", {"pr": 1, "oid": OID, "base": "main"}), ("how", "PR #1"), ("subs", (1, 0)), ("dropped", 1), ("item_id", "x"),
                        ("current", ("Todo", "a")), ("to_id", "b"), ("project_id", "P"), ("status", "set"), ("warned", ["Item closed"]),
-                       ("chk", {"ready": True, "unticked": ["a"], "boxes": 1}), ("given", [44, False])):
+                       ("chk", {"ready": True, "unticked": ["a"], "boxes": 1}), ("given", [44, False]), ("at_merge", "missing")):
         assert done._digest({**base, key: other}) != done._digest(base), key
 
 
