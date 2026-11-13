@@ -114,7 +114,7 @@ ghp setup
 /speckit.ghp.pull 42
 ```
 
-**Proposed Catalog Entry** (the entry of `catalog/extensions.json`; add `sha256` once the release file exists)
+**Proposed Catalog Entry** (the entry of `catalog/extensions.json`)
 
 ```json
 {
@@ -125,6 +125,7 @@ ghp setup
     "author": "praveenlavu",
     "version": "0.1.1",
     "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip",
+    "sha256": "24f87a15f8ce3b21db462f1599cebe9d087ab7e3ca71030e36efc97c8cd77488",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
     "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md",
