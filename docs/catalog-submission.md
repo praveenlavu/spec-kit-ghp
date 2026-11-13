@@ -39,7 +39,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 | Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip` |
 | License | `MIT` |
 | Homepage | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md` |
+| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md` |
 | Changelog URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md` |
 | Required Spec Kit Version | `>=1.2.1` |
 | Number of Commands | `13` |
@@ -129,7 +129,7 @@ ghp setup
     "sha256": "24f87a15f8ce3b21db462f1599cebe9d087ab7e3ca71030e36efc97c8cd77488",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
-    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/README.md",
+    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md",
     "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md",
     "license": "MIT",
     "requires": {

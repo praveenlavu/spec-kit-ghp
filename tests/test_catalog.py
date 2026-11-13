@@ -275,7 +275,7 @@ def test_catalog_files_carry_the_address_and_dates_fields():
     assert e["catalog_url"] == "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json"
     assert w["catalog_url"] == "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json"
     ext, wf = e["extensions"]["ghp"], w["workflows"]["ghp-lifecycle"]
-    assert ext["documentation"] == blob_url(v, "README.md") and ext["changelog"] == blob_url(v, "CHANGELOG.md")
+    assert ext["documentation"] == "https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md" and ext["changelog"] == blob_url(v, "CHANGELOG.md")
     assert wf["documentation"] == blob_url(v, "workflows/ghp-lifecycle/README.md")
     assert wf["changelog"] == blob_url(v, "workflows/ghp-lifecycle/CHANGELOG.md")
     dates = {e["updated_at"], w["updated_at"], ext["created_at"], ext["updated_at"], wf["created_at"], wf["updated_at"]}
