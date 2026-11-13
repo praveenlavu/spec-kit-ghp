@@ -175,6 +175,12 @@ def shape(c):
             "last_edited_at": c.last_edited_at, "minimized": c.minimized, "app": c.app, "viewer_did_author": c.viewer_did_author}
 
 
+def config_on_main(w):
+    """The trust config `main` holds before the test touches it (None when absent): the teardown puts exactly this back, never a bare delete."""
+    p = w.clone / "ghp.config.json"
+    return p.read_text() if p.exists() else None
+
+
 def _put_main(w, files):
     """Make `main` hold exactly these files' contents (None removes the file); one commit, pushed, when anything differs."""
     git(w, "checkout", "-q", "main")
@@ -203,6 +209,7 @@ def world(gh, tmp_path_factory):
     w.ag.arm()
     w.clone = w.root / "scratch"
     git(w, "clone", "-q", "https://github.com/%s.git" % FULL, str(w.clone), cwd=w.root)
+    before = config_on_main(w)
     try:
         RECORD["main_setup"] = _put_main(w, {WF_PATH: WORKFLOW, "ghp.config.json": TRUST})
         for _ in range(10):  # a just-pushed workflow takes a moment to register; a disabled one (an earlier teardown) is enabled again
@@ -253,7 +260,7 @@ def world(gh, tmp_path_factory):
             clean["workflow_disabled"] = WF
         except GhError as e:
             clean["workflow_disable_error"] = str(e)
-        clean["main_restore"] = _put_main(w, {WF_PATH: None, "ghp.config.json": None})
+        clean["main_restore"] = _put_main(w, {WF_PATH: None, "ghp.config.json": before})
         if os.environ.get("GHP_T31_RECORD"):
             Path(os.environ["GHP_T31_RECORD"]).write_text(json.dumps(RECORD, indent=2, default=str))
 
