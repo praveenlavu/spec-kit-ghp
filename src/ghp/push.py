@@ -25,8 +25,11 @@ UNVERIFIED live: the E_LABEL_DROPPED branch with a token without push access; th
 earlier run on a busy repo (the plan's search does not wait for GitHub's list lag; only `issues.create`'s own re-read does); a push of
 many tasks (100 is extrapolated); a push by the token of a GitHub Actions run (its identity is read through GraphQL `viewer`, T31a: REST `GET /user` is a 403 there).
 """
+import contextlib
 import hashlib
 import json
+import os
+import tempfile
 import re
 import textwrap
 import time
@@ -361,8 +364,40 @@ def _tasks_md(cfg, ref, source):
     return text
 
 
+@contextlib.contextmanager
+def _story_lock(ref, wait=300):
+    """One `push --apply` per story on this machine: a second waits (up to `wait` s), then re-reads and finds the tasks the first made. Two runs
+    at once used to create every task twice (live case L-061). shortcut: another machine or runner is not covered (GitHub has no atomic
+    step; the ready-made workflows use `concurrency:`), and on Windows there is no lock; upgrade only if GitHub gains a compare-and-set."""
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    name = hashlib.sha256(("%s/%s#%d" % (ref.owner, ref.repo, ref.number)).encode()).hexdigest()[:20]
+    fd = os.open(os.path.join(tempfile.gettempdir(), "ghp-push-%d-%s.lock" % (os.getuid(), name)), os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        end = time.monotonic() + wait
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= end:
+                    raise ValueError("another `ghp push --apply` of %s/%s#%d is still running on this machine; wait for it to finish, then run again" % (ref.owner, ref.repo, ref.number))
+                time.sleep(0.2)
+        yield
+    finally:
+        os.close(fd)  # closing releases the lock
+
+
 def run(args, gh):
     ref = issues._resolve(args.ref)  # config, then the ref: a bad one is refused before any call
+    with _story_lock(ref) if args.apply else contextlib.nullcontext():
+        return _run(args, gh, ref)
+
+
+def _run(args, gh, ref):
     cfg = Config.load()
     try:
         md = _tasks_md(cfg, ref, args.source)

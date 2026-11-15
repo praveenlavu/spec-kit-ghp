@@ -1048,3 +1048,16 @@ def test_mentions_are_defanged_before_the_cut_so_a_cut_title_is_short_enough_and
     assert len(title) <= 256 and title.endswith("…") and "@" not in title and ops[0]["cut"]
     push_all(hub, tasks)
     assert hub.issues[10]["title"] == title and set(actions(plan(hub, tasks)[0]).values()) == {"unchanged"}
+
+
+def test_a_second_apply_of_the_same_story_waits_for_the_first_then_gives_up(monkeypatch):
+    """L-061: two applies at once created every task twice. A held lock makes the second wait, then refuse (exit 2), and it frees on exit."""
+    ref = Ref("o", "r", 7)
+    with push._story_lock(ref):
+        with pytest.raises(ValueError, match="still running"):
+            with push._story_lock(ref, wait=0.3):
+                raise AssertionError("must not enter while the first holds the lock")
+        with push._story_lock(Ref("o", "r", 8), wait=0.3):  # another story is not blocked
+            pass
+    with push._story_lock(ref, wait=0.3):  # released
+        pass
