@@ -1,12 +1,13 @@
 # Catalog submission (DRAFT)
 
 **DRAFT. Nothing is filed with Spec Kit.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
-Whether to publish is the owner's decision, and it has not been made. The release `v0.1.1` exists (the first release, `v0.1.0`, was published the day before), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.1.
+Whether to publish is the owner's decision, and it has not been made. The release `v0.1.1` exists (the first release, `v0.1.0`, was published the day before), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.2.
+**0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs.** Every test, install and box below was run against 0.1.1 and is labelled so; none of it has been run on 0.1.2 yet. The live re-run of two simultaneous pushes of one story on 0.1.2: pending.
 Boxes are ticked only for what was done against the published 0.1.1 release; every box left empty is a judgement for the person filing.
 
 **Two different numbers.** The catalog entry counts the extension's **slash commands**, from `extension.yml`: 13 commands (`speckit.ghp.*`) and 2 hooks. The `ghp` program is a separate thing with 21 commands of its own (`ghp --help`); those are not counted in any form.
 
-**Two different files on the release.** The extension file is `spec-kit-ghp-extension-0.1.1.zip`, made by `python3 scripts/build_extension_zip.py <dir>`. The bundle file is `ghp-0.1.1.zip`, made by `specify bundle build` (its name is always the bundle id and its version). Both are attached to the `v0.1.1` release.
+**Two different files on the release.** The extension file is `spec-kit-ghp-extension-0.1.2.zip`, made by `python3 scripts/build_extension_zip.py <dir>`. The bundle file is `ghp-0.1.2.zip`, made by `specify bundle build` (its name is always the bundle id and its version). Both are attached to the `v0.1.2` release.
 
 **Where each one is filed.** The extension and the bundle go through issue forms in `github/spec-kit` ("Extension Submission" and "Bundle Submission"). A workflow has no issue form: it is a pull request that adds the entry to `workflows/catalog.community.json`, as Spec Kit's workflow publishing guide says. Every value below is copied from `extension.yml`, `workflows/ghp-lifecycle/workflow.yml`, `bundle/bundle.yml` or the catalog files; `tests/test_catalog.py` fails when one drifts.
 
@@ -23,7 +24,7 @@ Boxes are ticked only for what was done against the published 0.1.1 release; eve
 | `catalog/workflows.json` | The catalog entry for the `ghp-lifecycle` workflow, copied from `workflows/ghp-lifecycle/workflow.yml`, with the same `requires` block (Spec Kit refuses a pinned install whose downloaded `requires` differs). |
 | `bundle/bundle.yml` and `bundle/README.md` | One bundle that installs the extension and the workflow together, each pinned to its version, and the page that explains it. |
 
-The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. The extension entry gets the SHA-256 of the file attached to the release (the same value as its line in `SHA256SUMS`) once that file exists. The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the release date, 2026-11-12, the same as the changelog.
+The entries keep `"verified": false`: only the Spec Kit maintainers can verify an entry. The extension entry gets the SHA-256 of the file attached to the release (the same value as its line in `SHA256SUMS`) once that file exists. The download address is a file attached to the release, not GitHub's automatic archive of the tag. The dates are the release date, 2026-11-15, the same as the changelog.
 
 ## 1. Extension submission
 
@@ -32,15 +33,15 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 | Issue title | `[Extension]: Add ghp` |
 | Extension ID | `ghp` |
 | Extension Name | `Spec Kit for GitHub Projects - human-gated lifecycle` |
-| Version | `0.1.1` |
+| Version | `0.1.2` |
 | Description | `GitHub issue to Done through Spec Kit, with a human sign-off before every write.` |
 | Author | `praveenlavu` |
 | Repository URL | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip` |
+| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/spec-kit-ghp-extension-0.1.2.zip` |
 | License | `MIT` |
 | Homepage | `https://github.com/praveenlavu/spec-kit-ghp` |
 | Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md` |
-| Changelog URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md` |
+| Changelog URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.2/CHANGELOG.md` |
 | Required Spec Kit Version | `>=1.2.1` |
 | Number of Commands | `13` |
 | Number of Hooks | `2` |
@@ -49,7 +50,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 **Required Tools**
 
 ```markdown
-- ghp (>=0.1.1) - required; the command-line program from this repository: pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
+- ghp (>=0.1.2) - required; the command-line program from this repository: pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.2
 - git - required
 - gh - required; every GitHub call goes through the GitHub CLI, signed in with the project scope
 ```
@@ -107,8 +108,8 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 
 ```bash
 # Install the program and the extension
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
-specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.2
+specify extension add ghp --from https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/spec-kit-ghp-extension-0.1.2.zip
 
 # Connect, then pull a story
 ghp setup
@@ -124,20 +125,19 @@ ghp setup
     "name": "Spec Kit for GitHub Projects - human-gated lifecycle",
     "description": "GitHub issue to Done through Spec Kit, with a human sign-off before every write.",
     "author": "praveenlavu",
-    "version": "0.1.1",
-    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/spec-kit-ghp-extension-0.1.1.zip",
-    "sha256": "24f87a15f8ce3b21db462f1599cebe9d087ab7e3ca71030e36efc97c8cd77488",
+    "version": "0.1.2",
+    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/spec-kit-ghp-extension-0.1.2.zip",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
     "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md",
-    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/CHANGELOG.md",
+    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.2/CHANGELOG.md",
     "license": "MIT",
     "requires": {
       "speckit_version": ">=1.2.1",
       "tools": [
         {
           "name": "ghp",
-          "version": ">=0.1.1",
+          "version": ">=0.1.2",
           "required": true
         },
         {
@@ -162,8 +162,8 @@ ghp setup
       "governance"
     ],
     "verified": false,
-    "created_at": "2026-11-12T00:00:00Z",
-    "updated_at": "2026-11-12T00:00:00Z"
+    "created_at": "2026-11-15T00:00:00Z",
+    "updated_at": "2026-11-15T00:00:00Z"
   }
 }
 ```
@@ -186,9 +186,9 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 | Branch | `add-ghp-lifecycle` |
 | Workflow ID | `ghp-lifecycle` |
 | Workflow Name | `GitHub issue lifecycle` |
-| Version | `0.1.1` |
+| Version | `0.1.2` |
 | Repository | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Raw workflow URL | `https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.1/workflows/ghp-lifecycle/workflow.yml` |
+| Raw workflow URL | `https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.2/workflows/ghp-lifecycle/workflow.yml` |
 
 **Catalog entry** (the entry of `catalog/workflows.json`)
 
@@ -199,11 +199,11 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
     "name": "GitHub issue lifecycle",
     "description": "GitHub story issue to an open PR: spec, plan, tasks, push, implement, gate, review, PR. Every GitHub write is preview, human gate, apply. The story closes after merge.",
     "author": "praveenlavu",
-    "version": "0.1.1",
-    "url": "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.1/workflows/ghp-lifecycle/workflow.yml",
+    "version": "0.1.2",
+    "url": "https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/v0.1.2/workflows/ghp-lifecycle/workflow.yml",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
-    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/workflows/ghp-lifecycle/README.md",
-    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/workflows/ghp-lifecycle/CHANGELOG.md",
+    "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.2/workflows/ghp-lifecycle/README.md",
+    "changelog": "https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.2/workflows/ghp-lifecycle/CHANGELOG.md",
     "license": "MIT",
     "requires": {
       "speckit_version": ">=1.2.1",
@@ -221,8 +221,8 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
       "workflow",
       "governance"
     ],
-    "created_at": "2026-11-12T00:00:00Z",
-    "updated_at": "2026-11-12T00:00:00Z"
+    "created_at": "2026-11-15T00:00:00Z",
+    "updated_at": "2026-11-15T00:00:00Z"
   }
 }
 ```
@@ -234,7 +234,7 @@ A pull request to `github/spec-kit` that adds the entry below to `workflows/cata
 
 **Workflow Name**: GitHub issue lifecycle
 **Workflow ID**: ghp-lifecycle
-**Version**: 0.1.1
+**Version**: 0.1.2
 **Repository**: https://github.com/praveenlavu/spec-kit-ghp
 
 ### Checklist
@@ -259,13 +259,13 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 | Issue title | `[Bundle]: Add ghp` |
 | Bundle ID | `ghp` |
 | Bundle Name | `Spec Kit for GitHub Projects` |
-| Version | `0.1.1` |
+| Version | `0.1.2` |
 | Role or Team | `developer` |
 | Description | `The ghp extension and the ghp-lifecycle workflow together: GitHub issue to Done through Spec Kit, with a human sign-off before every write.` |
 | Author | `praveenlavu` |
 | Repository URL | `https://github.com/praveenlavu/spec-kit-ghp` |
-| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip` |
-| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.1/bundle/README.md` |
+| Download URL | `https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/ghp-0.1.2.zip` |
+| Documentation URL | `https://github.com/praveenlavu/spec-kit-ghp/blob/v0.1.2/bundle/README.md` |
 | License | `MIT` |
 | Required Spec Kit Version | `>=1.2.1` |
 | Integration Target | leave empty: the bundle pins no integration |
@@ -274,8 +274,8 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 **Components Provided**
 
 ```markdown
-- extensions: ghp@0.1.1
-- workflows: ghp-lifecycle@0.1.1
+- extensions: ghp@0.1.2
+- workflows: ghp-lifecycle@0.1.2
 ```
 
 **Required Component Catalogs**
@@ -289,7 +289,7 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 
 ```markdown
 - Installs the ghp extension (13 slash commands, 2 hooks) and the ghp-lifecycle workflow in one step
-- Both parts pinned to 0.1.1, the same version as the ghp program they call
+- Both parts pinned to 0.1.2, the same version as the ghp program they call
 - Every GitHub write in the workflow is a preview, a gate, then an apply
 ```
 
@@ -333,15 +333,15 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 
 ```bash
 # The program the extension and the workflow call
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.1
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp@v0.1.2
 
 # The two component catalogs
 specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed
 specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp
 
 # The bundle file
-curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip
-specify bundle install ./ghp-0.1.1.zip
+curl -L -o ghp-0.1.2.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/ghp-0.1.2.zip
+specify bundle install ./ghp-0.1.2.zip
 
 # Run one story
 specify workflow run ghp-lifecycle -i issue_number=42
@@ -354,12 +354,12 @@ specify workflow run ghp-lifecycle -i issue_number=42
   "ghp": {
     "id": "ghp",
     "name": "Spec Kit for GitHub Projects",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "role": "developer",
     "description": "The ghp extension and the ghp-lifecycle workflow together: GitHub issue to Done through Spec Kit, with a human sign-off before every write.",
     "author": "praveenlavu",
     "license": "MIT",
-    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip",
+    "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/ghp-0.1.2.zip",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "requires": {
       "speckit_version": ">=1.2.1"

@@ -3,6 +3,14 @@
 All notable changes to `ghp` are listed here, newest first.
 The version number rules are in [VERSIONING.md](VERSIONING.md).
 
+## 0.1.2 (2026-11-15)
+
+A small fix release. Nothing is removed.
+
+Fixed:
+
+- A second `ghp push --apply` of the same story on the same machine waits for the first (up to 300 seconds, then it stops with exit 2) and then reads again. Before, two runs started together created every task twice. Two runs from two different machines at the same instant can still do that; GitHub gives no way to prevent it.
+
 ## 0.1.1 (2026-11-12)
 
 A fix release. Nothing is removed. Read the note on `ghp done` before you upgrade.

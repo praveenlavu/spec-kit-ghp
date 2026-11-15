@@ -2,6 +2,10 @@
 
 Changes to the `ghp-lifecycle` workflow. The workflow carries the same version as the `ghp` extension; the whole project's history is in the [repository changelog](../../CHANGELOG.md).
 
+## 0.1.2 (2026-11-15)
+
+- No change to the workflow. Its version moves with `ghp` 0.1.2, whose `ghp push --apply` now waits for another apply of the same story on the same machine.
+
 ## 0.1.1 (2026-11-12)
 
 - Fixed: the `tasks` step runs its command with `--workflow`, so it, like the review step, ends with a short summary instead of a question nobody can answer before the next gate. The steps, the gates and their order are unchanged.

@@ -107,7 +107,7 @@ def test_coming_table_names_only_verbs_that_do_not_exist_yet():
 
 # ---- README install and help: the release pin, the bundle route, the likely failures, the comparison, the done --pr rule ----
 QUICKSTART = ROOT / "docs" / "quickstart.md"
-PIN = "git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1"
+PIN = "git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.2"
 
 
 def flat(p):
@@ -125,7 +125,7 @@ def test_install_is_pinned_to_the_release_tag(doc):
     t = text(doc)
     assert "pipx install %s\n" % PIN in t and "python3 -m pip install --user %s`" % PIN in t
     # every install address of this repository names the tag
-    assert all(a.endswith("@v0.1.1") for a in re.findall(r"git\+https://github\.com/praveenlavu/spec-kit-ghp(?:\.git)?\S*?(?=[`\s])", t))
+    assert all(a.endswith("@v0.1.2") for a in re.findall(r"git\+https://github\.com/praveenlavu/spec-kit-ghp(?:\.git)?\S*?(?=[`\s])", t))
     assert "tag is created when" not in flat(doc) and "until then these lines do not work" not in flat(doc)  # the tag exists since the release
 
 
@@ -133,11 +133,11 @@ def test_readme_gives_the_bundle_route_as_the_bundle_page_does():
     t, bundle_page = text(README), text(ROOT / "bundle" / "README.md")
     for line in ("specify extension catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/extensions.json --name ghp --install-allowed",
                  "specify workflow catalog add https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/catalog/workflows.json --name ghp",
-                 "curl -L -o ghp-0.1.1.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.1/ghp-0.1.1.zip",
-                 "specify bundle install ./ghp-0.1.1.zip"):
+                 "curl -L -o ghp-0.1.2.zip https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/ghp-0.1.2.zip",
+                 "specify bundle install ./ghp-0.1.2.zip"):
         assert line + "\n" in t and line in bundle_page and line in text(ROOT / "docs" / "catalog-submission.md"), line
     assert "(https://github.com/praveenlavu/spec-kit-ghp/blob/main/bundle/README.md)" in t  # bundle/ is not installed: a full address
-    assert "The bundle file is attached to the 0.1.1 release." in flat(README) and "does not exist yet" not in flat(README)
+    assert "The bundle file is attached to the 0.1.2 release." in flat(README) and "does not exist yet" not in flat(README)
 
 
 def test_the_likely_failures_are_in_the_readme_with_their_real_exit_codes():

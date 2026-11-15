@@ -33,18 +33,18 @@ The `project` scope (a permission of the sign-in) lets `gh` read and update your
 ## Step 2: Install `ghp`
 
 ```bash
-pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1
+pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.2
 ghp --version
 ```
 
 Expected output (the version number may differ):
 
 ```text
-ghp 0.1.1
+ghp 0.1.2
 ```
 
-No `pipx`? Run `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1` instead.
-Both install the 0.1.1 release.
+No `pipx`? Run `python3 -m pip install --user git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.2` instead.
+Both install the 0.1.2 release.
 
 ## Step 3: Create `ghp.config.json`
 

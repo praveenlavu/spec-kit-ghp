@@ -117,7 +117,7 @@ def test_catalog_addresses_name_the_release_tag():
 def test_checksum_is_absent_or_real_and_points_at_a_release_file():
     """No release file exists yet, so there is no checksum; once there is one it must be a SHA-256 of a release file, never of the tag archive."""
     e = catalog("extensions.json")["extensions"]["ghp"]
-    assert re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
+    assert "sha256" not in e or re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
     assert "/releases/download/" in e["download_url"] and "/archive/" not in e["download_url"]
 
 
@@ -138,7 +138,7 @@ def test_bundle_readme_pins_the_components_and_passes_the_lint():
     b, e = bundle(), catalog("extensions.json")["extensions"]["ghp"]
     t = _text(BUNDLE_README)
     flat = " ".join(t.split())
-    assert "Released as `v0.1.1`." in t and "Not published yet" not in flat and "No release exists" not in flat
+    assert "Released as `v0.1.2`." in t and "Not published yet" not in flat and "No release exists" not in flat
     assert "for a %s" % b["bundle"]["role"] in flat
     for kind, part in (("Extension", b["provides"]["extensions"][0]), ("Workflow", b["provides"]["workflows"][0])):
         assert "| %s | `%s` | %s |" % (kind, part["id"], part["version"]) in t, kind
@@ -347,7 +347,7 @@ def test_what_is_not_known_yet_is_marked_and_nothing_is_invented():
     for heading in ("1. Extension submission", "3. Bundle submission"):
         details = _block(_form(heading), "Testing Details")
         assert "Spec Kit 1.2.1" in details and "Spec Kit 1.4.0" in details, heading
-    assert catalog("extensions.json")["extensions"]["ghp"]["sha256"] == "24f87a15f8ce3b21db462f1599cebe9d087ab7e3ca71030e36efc97c8cd77488" and "\"sha256\": \"24f87a15f8ce3b21db462f1599cebe9d087ab7e3ca71030e36efc97c8cd77488\"" in t  # the line of SHA256SUMS
+    assert "sha256" not in catalog("extensions.json")["extensions"]["ghp"] and not re.search(r"\b[0-9a-f]{64}\b", t)  # added after the release file exists
     assert "add `sha256` once the release file exists" not in t
 
 

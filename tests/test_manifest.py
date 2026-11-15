@@ -357,7 +357,7 @@ def test_stack_command_ties_into_the_lifecycle_commands():
 def test_setup_installs_the_release_tag():
     """The install line names the release, as the README and AGENTS.md do, not whatever `main` holds."""
     text = flat("commands", "setup.md")
-    assert "pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.1" in text
+    assert "pipx install git+https://github.com/praveenlavu/spec-kit-ghp.git@v0.1.2" in text
     assert "spec-kit-ghp.git`" not in text  # no unpinned install line left
 
 
