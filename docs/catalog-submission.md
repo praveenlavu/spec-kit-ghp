@@ -127,6 +127,7 @@ ghp setup
     "author": "praveenlavu",
     "version": "0.1.2",
     "download_url": "https://github.com/praveenlavu/spec-kit-ghp/releases/download/v0.1.2/spec-kit-ghp-extension-0.1.2.zip",
+    "sha256": "21dc228f99fbf9b8768b6f75e889be2bb99c68ed9b5237951276e33e9dedfbda",
     "repository": "https://github.com/praveenlavu/spec-kit-ghp",
     "homepage": "https://github.com/praveenlavu/spec-kit-ghp",
     "documentation": "https://github.com/praveenlavu/spec-kit-ghp/blob/main/README.md",

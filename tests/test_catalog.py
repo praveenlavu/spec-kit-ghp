@@ -117,7 +117,7 @@ def test_catalog_addresses_name_the_release_tag():
 def test_checksum_is_absent_or_real_and_points_at_a_release_file():
     """No release file exists yet, so there is no checksum; once there is one it must be a SHA-256 of a release file, never of the tag archive."""
     e = catalog("extensions.json")["extensions"]["ghp"]
-    assert "sha256" not in e or re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
+    assert re.fullmatch(r"[0-9a-f]{64}", e["sha256"])
     assert "/releases/download/" in e["download_url"] and "/archive/" not in e["download_url"]
 
 
@@ -347,7 +347,7 @@ def test_what_is_not_known_yet_is_marked_and_nothing_is_invented():
     for heading in ("1. Extension submission", "3. Bundle submission"):
         details = _block(_form(heading), "Testing Details")
         assert "Spec Kit 1.2.1" in details and "Spec Kit 1.4.0" in details, heading
-    assert "sha256" not in catalog("extensions.json")["extensions"]["ghp"] and not re.search(r"\b[0-9a-f]{64}\b", t)  # added after the release file exists
+    assert catalog("extensions.json")["extensions"]["ghp"]["sha256"] == "21dc228f99fbf9b8768b6f75e889be2bb99c68ed9b5237951276e33e9dedfbda" and "\"sha256\": \"21dc228f99fbf9b8768b6f75e889be2bb99c68ed9b5237951276e33e9dedfbda\"" in t  # the line of SHA256SUMS
     assert "add `sha256` once the release file exists" not in t
 
 
