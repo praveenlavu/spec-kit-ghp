@@ -1,10 +1,12 @@
 # spec-kit-ghp
 
+![spec-kit-ghp: your AI agent does the GitHub Projects grunt work, and you say yes before anything on your board changes](https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/docs/assets/banner.svg)
+
 **Your AI agent does the GitHub Projects grunt work. You press yes.**
 
 > **AI agents are fast. Your board is where your team keeps its trust.**
-> spec-kit-ghp lets an agent do the slow parts of a story: read the issue, write the spec and the plan, split the tasks, write the code and the tests, open the pull request.
-> Every change to your issues and your Project board is shown to you first and written only after your yes. A saved preview is refused if the plan has changed since you approved it. (The one opt-in exception is the optional link-on-merge workflow.)
+> spec-kit-ghp is the checkpoint between the two: the agent reads the issue, writes the spec and the plan, splits the tasks, writes the code and the tests and opens the pull request, and you decide at every step that touches GitHub.
+> Each change to your issues and your Project board is shown to you first and written only after your yes. A saved preview is refused if the plan has changed since you approved it. (The one opt-in exception is the optional link-on-merge workflow.)
 
 <div align="center">
 
@@ -27,6 +29,27 @@
 spec-kit-ghp is an add-on for [Spec Kit](https://github.com/github/spec-kit), a toolkit that has your AI coding agent agree a written spec and plan with you before it writes any code.
 It connects that agent to your GitHub issues and your Project board, so the right questions get asked up front and the grunt work of planning, coding and testing gets done for you.
 Nothing on GitHub changes until you have seen the exact change and said yes, which leaves your time for the questions, the tangents worth exploring and the decisions.
+
+## See it in 20 seconds
+
+A preview first, then the same command with your yes. Example output, trimmed, with an invented story and invented tasks:
+
+```text
+$ ghp push 12
+# Plan: push tasks to #12 as sub-issues
+create 3 · update 0 · unchanged 0 · orphan 0
+
+| action | task | title | issue | sub-issue | project item |
+|---|---|---|---|---|---|
+| create | T001 | T001 Add the greeting page | - | new sub-issue of #12 | add to the Project, Todo |
+| create | T002 | T002 Show the opening hours | - | new sub-issue of #12 | add to the Project, Todo |
+| create | T003 | T003 Write the page test | - | new sub-issue of #12 | add to the Project, Todo |
+
+$ ghp push 12 --apply
+created 3, updated 0, failed 0
+```
+
+Without `--apply` nothing is sent. With it, only the plan you read is written. If the plan changed in between, `ghp` refuses and writes nothing.
 
 ## Why it exists
 
@@ -51,7 +74,7 @@ Nothing on GitHub changes until you have seen the exact change and said yes, whi
 
 **A good fit** if your work lives in GitHub Issues and a Project board owned by your user account, you use (or want to use) an AI coding agent with Spec Kit, and you want the agent to move fast without letting it write to your board unsupervised.
 
-**Not a fit, today** if your Projects belong to an organisation (refused in this release), if you want a fully hands-off autopilot (every write waits for a yes, by design), or if you track work in another tool. For Azure DevOps there is a sibling project, linked [below](#also-for-other-trackers).
+**Not a fit, today** if your Projects belong to an organisation (refused in this release), if you want a fully hands-off autopilot (every write waits for a yes, by design), or if you track work in another tool. For Azure DevOps or Jira Cloud there are sibling projects, linked [below](#also-for-other-trackers).
 
 ## How it works
 
@@ -241,7 +264,13 @@ More fixes, with example output, are in the [quick start guide](docs/quickstart.
 
 ## Also for other trackers
 
-- **Azure DevOps Boards:** [spec-kit-ado](https://github.com/praveenlavu/spec-kit-ado) brings the same idea to Azure DevOps stories.
+One idea, three trackers: the agent does the grunt work, you press yes.
+
+| Your tracker | Project | What it is |
+|---|---|---|
+| **GitHub Issues and Projects** | spec-kit-ghp (this project) | Preview, your yes, apply for every issue, card and pull request |
+| **Azure DevOps Boards** | [spec-kit-ado](https://github.com/praveenlavu/spec-kit-ado) | The same idea for Azure DevOps stories |
+| **Jira Cloud** | [spec-kit-jira](https://github.com/praveenlavu/spec-kit-jira) | The same idea for Jira Cloud stories, as a Python command-line tool (`skj`) |
 
 Each is a separate, independent project with its own releases. You only need the one for your tracker.
 

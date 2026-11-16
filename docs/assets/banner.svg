@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-labelledby="t d">
+  <title id="t">spec-kit-ghp: your AI agent does the GitHub Projects grunt work, you press yes</title>
+  <desc id="d">A terminal card shows a preview of three new issues, the person's yes, then the same command applied.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="20" fill="url(#bg)"/>
+  <rect x="0" y="0" width="10" height="300" rx="5" fill="#fbbf24"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="56" y="108" font-size="58" font-weight="700" fill="#f8fafc">spec-kit-ghp</text>
+    <text x="56" y="154" font-size="23" fill="#cbd5e1">Your AI agent does the GitHub Projects grunt work.</text>
+    <text x="56" y="204" font-size="36" font-weight="700" fill="#fbbf24">You press yes.</text>
+    <text x="56" y="246" font-size="16" fill="#94a3b8">Preview, then your yes, then apply. Nothing on your board changes without it.</text>
+  </g>
+  <rect x="690" y="40" width="474" height="220" rx="12" fill="#0b1220" stroke="#334155"/>
+  <circle cx="714" cy="62" r="6" fill="#f87171"/>
+  <circle cx="734" cy="62" r="6" fill="#fbbf24"/>
+  <circle cx="754" cy="62" r="6" fill="#4ade80"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15">
+    <text x="714" y="100" fill="#94a3b8">$ ghp push 12</text>
+    <text x="714" y="124" fill="#e2e8f0">create 3 · update 0 · nothing written</text>
+    <text x="714" y="156" fill="#fbbf24">&gt; you read the plan. you say yes.</text>
+    <text x="714" y="188" fill="#94a3b8">$ ghp push 12 --apply</text>
+    <text x="714" y="212" fill="#86efac">created 3, updated 0, failed 0</text>
+    <text x="714" y="244" fill="#64748b"># a changed plan is refused</text>
+  </g>
+</svg>

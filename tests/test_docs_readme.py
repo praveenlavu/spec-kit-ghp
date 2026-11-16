@@ -13,8 +13,8 @@ README = ROOT / "README.md"
 DOCS = [README, ROOT / "docs" / "quickstart.md", ROOT / "docs" / "glossary.md"]
 NOT_AFFILIATED = ("spec-kit-ghp is an independent, community-made project. It is not affiliated with, endorsed by, "
                   "or sponsored by GitHub, Inc., Microsoft, or the Spec Kit project.")
-# Images allowed in the README: shields.io badges and this repo's own CI badge. Nothing else (no vendor logos).
-BADGE = re.compile(r"^https://(img\.shields\.io/|github\.com/praveenlavu/spec-kit-ghp/actions/workflows/ci\.yml/badge\.svg)")
+# Images allowed in the README: shields.io badges, this repo's own CI badge and its own banner. Nothing else (no vendor logos).
+BADGE = re.compile(r"^https://(img\.shields\.io/|github\.com/praveenlavu/spec-kit-ghp/actions/workflows/ci\.yml/badge\.svg|raw\.githubusercontent\.com/praveenlavu/spec-kit-ghp/main/docs/assets/banner\.svg$)")
 FORBIDDEN = [re.compile(p, re.I) for p in (r"\bspike", r"docs/plans")]  # the private names are the owner's denylist: below
 TASK_ID = re.compile(r"\b(T\d{2}[a-z]?|AC\d+|[DGX]\d+)\b")  # internal plan ids, case-sensitive (Spec Kit task ids such as T001 are fine)
 FENCE = re.compile(r"^```([\w-]*)\n(.*?)^```", re.M | re.S)
