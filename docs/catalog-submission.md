@@ -1,9 +1,9 @@
 # Catalog submission (DRAFT)
 
-**DRAFT. Nothing is filed with Spec Kit.** This page holds the values to paste into Spec Kit's three submission routes on the day someone decides to list `ghp` in Spec Kit's community catalogs.
-Whether to publish is the owner's decision, and it has not been made. The release `v0.1.1` exists (the first release, `v0.1.0`, was published the day before), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.2.
-**0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs.** Every test, install and box below was run against 0.1.1 and is labelled so; none of it has been run on 0.1.2 yet. The live re-run of two simultaneous pushes of one story on 0.1.2: pending.
-Boxes are ticked only for what was done against the published 0.1.1 release; every box left empty is a judgement for the person filing.
+**DRAFT until the three filings are made.** This page holds the values for Spec Kit's three submission routes: an extension issue, a workflow pull request and a bundle issue. The owner decided to list `ghp` and asked for the filings to be made from the owner's own `praveenlavu` account.
+The release `v0.1.2` exists (the first release, `v0.1.0`, was published on 2026-11-12, and `v0.1.1` on 2026-11-13), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.2.
+**0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs.** Run on 0.1.2 on 2026-11-16: the installs (extension from the download address, pinned install from the catalog, and the bundle, on Spec Kit 1.2.1 and 1.4.0), the bundle validation, build and install by id, the offline test suite, hosted CI, and the live re-run of two simultaneous pushes of one story ([record](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/L-C-R3.md)). Everything else below was run on 0.1.1 and is labelled so.
+Boxes are ticked only for what was done against a published release (0.1.2 where it says so, otherwise 0.1.1); every box left empty is a judgement for the person filing.
 
 **Two different numbers.** The catalog entry counts the extension's **slash commands**, from `extension.yml`: 13 commands (`speckit.ghp.*`) and 2 hooks. The `ghp` program is a separate thing with 21 commands of its own (`ghp --help`); those are not counted in any form.
 
@@ -87,7 +87,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 - [x] All command files exist and are properly formatted
 - [x] Extension ID follows naming conventions (lowercase-with-hyphens)
 
-**Testing Details** (from what was run against the 0.1.1 release on 2026-11-13)
+**Testing Details** (0.1.2 where marked; the rest was run against the 0.1.1 release on 2026-11-13, and 0.1.2 differs from it only by the push lock and docs)
 
 ```markdown
 **Tested on:**
@@ -96,12 +96,13 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 **Test project:** a new empty folder where `specify init` ran, for each Spec Kit version; the live scenarios ran against a private and a public test repository, a public consumer test repository, and a test Project owned by a user account
 
 **Test scenarios:**
-1. Installed the ghp program from the v0.1.1 tag with pip in a virtual environment (`ghp --version` printed 0.1.1); the uv and pipx commands were not run for 0.1.1
-2. Installed the extension from the download URL on both Spec Kit versions, and again by a pinned install from the catalog and through the bundle: 13 commands and 2 hooks shown by `specify extension list` each time
+1. Installed the ghp program from the v0.1.2 tag with pip in a virtual environment (`ghp --version` printed 0.1.2); the uv and pipx commands were not run for 0.1.2
+2. (0.1.2) Installed the extension from the download URL on both Spec Kit versions, and again by a pinned install from the catalog and through the bundle: all exit 0, the extension file matches the checksum in the catalog entry
 3. Ran the ghp-lifecycle workflow on Spec Kit 1.4.0 on a test story, from the pull to an open pull request, then `ghp done` after the merge, with every GitHub write previewed, approved at a gate, then applied (terminal mode); the gate answers were typed by an AI agent that had read each preview
 4. Ran ghp push with a plan that had gone stale and saw it refuse to write; on Spec Kit 1.2.1 ran the workflow up to the push approval, with a reject at the first gate and a stale plan at the push gate
 5. In comment mode on a public test repository, with the Actions bot as the agent: `ghp done` closed a story from an approval comment after `ghp approvals check`, and an edited, rejected, stale or same-account approval was refused
-6. Ran the live test suite against GitHub: 48 passed; ran the offline test suite inside the public export: 7307 passed, 120 skipped
+6. Ran the live test suite against GitHub on 0.1.1: 48 passed; ran the offline test suite in the 0.1.2 export: 7308 passed, 120 skipped (two tests that need a real terminal were run in the foreground, because a background run ignores Ctrl-C)
+7. (0.1.2) Started two `ghp push --apply` of the same story at the same instant on one machine: one made the 3 tasks, the other waited about 22 seconds, found them and wrote nothing; the story has 3 sub-issues (on 0.1.1 the same test made 6)
 ```
 
 **Example Usage**
@@ -313,7 +314,7 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 - [x] Bundle ID matches the manifest and follows naming conventions
 - [x] Every extension, preset, workflow, and step reference is pinned where the manifest requires a version
 
-**Testing Details** (from what was run against the 0.1.1 release on 2026-11-13)
+**Testing Details** (0.1.2 where marked; the rest was run against the 0.1.1 release on 2026-11-13, and 0.1.2 differs from it only by the push lock and docs)
 
 ```markdown
 **Tested on:**
@@ -324,7 +325,7 @@ The end-to-end run was made on Spec Kit 1.4.0, in terminal mode only, on a priva
 **Test scenarios:**
 1. Added the two component catalogs, served from `main`
 2. Validated the bundle manifest (it validates only with those catalogs added to the project)
-3. Built the release file from a clean clone of the tag and compared it with the attached ghp-0.1.1.zip: identical
+3. (0.1.2) Built the release file again and compared it with the attached ghp-0.1.2.zip: identical (SHA-256 5c21…3b61)
 4. Installed the bundle from the downloaded release file in a clean project
 5. Installed the bundle by its id from a local install-allowed bundle catalog (a `file://` address)
 6. Listed the installed extension: 13 commands and 2 hooks
@@ -383,13 +384,13 @@ specify workflow run ghp-lifecycle -i issue_number=42
 
 ## What happens when someone files them
 
-Step 1 was done for 0.1.0 and again for 0.1.1; nothing has been filed. In order:
+Step 1 was done for 0.1.0, 0.1.1 and 0.1.2. In order:
 
-1. The repository is public, the `v0.1.1` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
+1. The repository is public, the `v0.1.2` release carries the extension file, the bundle file and `SHA256SUMS`, and the checksum of the extension file is in the extension entry.
 2. The extension is filed through Spec Kit's extension submission issue form, with the values in section 1. Spec Kit's guide says not to edit the catalog file with a pull request for an extension.
 3. The workflow is filed as a pull request, with the values in section 2.
 4. The bundle is filed through Spec Kit's bundle submission issue form, with the values in section 3.
-5. Each filing is made by the owner, from the owner's own account. An agent never files one.
+5. Each filing is made from the owner's own account (`praveenlavu`), at the owner's instruction.
 
 ## Not yet checked for the catalog
 

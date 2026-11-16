@@ -105,11 +105,11 @@ $ echo $?
 
 Not only unit tests. The 0.1.1 release was run against real GitHub test repositories and a test Project, with fictional data, and the records are in [docs/evidence](https://github.com/praveenlavu/spec-kit-ghp/tree/main/docs/evidence). The table below is for 0.1.1.
 
-0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs. The live re-run of two simultaneous pushes of one story on 0.1.2: pending.
+0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs. The live re-run of two simultaneous pushes of one story on 0.1.2 made 3 sub-issues, not 6; the record is [L-C-R3](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/L-C-R3.md).
 
 | What | Result |
 |---|---|
-| Offline tests | 7,307 pass (120 skipped); CI runs them on Python 3.9 and 3.13 |
+| Offline tests | 7,308 pass (120 skipped); CI runs them on Python 3.9 and 3.13 |
 | Live tests that write to real GitHub | 48 pass |
 | Spec Kit versions | Installs on 1.2.1 (the minimum) and 1.4.0 (the newest tried); the full workflow ran to the end on 1.4.0 |
 | From an AI agent (Claude Code) | The slash commands opened the pull request and, once it was merged, closed the story |
