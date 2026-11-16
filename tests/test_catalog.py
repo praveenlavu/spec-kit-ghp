@@ -176,11 +176,11 @@ def test_catalog_files_are_not_installed_with_the_extension():
 
 
 # ---- AC2 ----
-def test_draft_says_it_is_a_draft_and_nothing_is_published():
+def test_page_records_what_was_filed():
     t = _text(DRAFT)
-    assert "DRAFT" in "\n".join(t.splitlines()[:3])
+    assert "Filed on 2026-11-16" in "\n".join(t.splitlines()[:4])
     flat = " ".join(t.split())
-    assert "owner decided to list `ghp`" in flat and "from the owner's own `praveenlavu` account" in flat
+    assert "spec-kit#5441" in flat and "spec-kit#5442" in flat and "spec-kit#5443" in flat and "from the owner's own `praveenlavu` account" in flat
     assert "the release `v0.1.2` exists" in flat.lower()
     assert "**Verified" not in t  # nothing in this draft is a verified result
     assert "not GitHub's automatic archive" in flat  # the address is a release file
