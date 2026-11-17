@@ -1,12 +1,12 @@
 # spec-kit-ghp
 
-![spec-kit-ghp: your AI agent does the GitHub Projects grunt work, and you say yes before anything on your board changes](https://raw.githubusercontent.com/praveenlavu/spec-kit-ghp/main/docs/assets/banner.svg)
+![Spec Kit for GitHub Projects: less board upkeep, more time to build](docs/assets/banner.svg)
 
-**Your AI agent does the GitHub Projects grunt work. You press yes.**
+**Keep GitHub Projects in step with the work.**
 
-> **AI agents are fast. Your board is where your team keeps its trust.**
-> spec-kit-ghp is the checkpoint between the two: the agent reads the issue, writes the spec and the plan, splits the tasks, writes the code and the tests and opens the pull request, and you decide at every step that touches GitHub.
-> Each change to your issues and your Project board is shown to you first and written only after your yes. A saved preview is refused if the plan has changed since you approved it. (The one opt-in exception is the optional link-on-merge workflow.)
+spec-kit-ghp connects [Spec Kit](https://github.com/github/spec-kit) and your AI coding agent to GitHub Issues and Projects. The agent helps turn a story into a spec, a plan, code and tests, then prepares the issues, board updates and pull request for your review.
+
+Your team spends less time copying tasks, updating cards and gathering review notes. People set priorities, answer product questions and approve the changes.
 
 <div align="center">
 
@@ -26,16 +26,12 @@
 > This is an early release (0.1). The commands below have been run against real GitHub test repositories; the few that have not are labelled unverified.
 > See [What works today](#what-works-today), [Tested on real GitHub](#tested-on-real-github) and [Trust and limits](docs/trust-and-limits.md).
 
-spec-kit-ghp is an add-on for [Spec Kit](https://github.com/github/spec-kit), a toolkit that has your AI coding agent agree a written spec and plan with you before it writes any code.
-It connects that agent to your GitHub issues and your Project board, so the right questions get asked up front and the grunt work of planning, coding and testing gets done for you.
-Nothing on GitHub changes until you have seen the exact change and said yes, which leaves your time for the questions, the tangents worth exploring and the decisions.
-
 ## See it in 20 seconds
 
 A preview first, then the same command with your yes. Example output, trimmed, with an invented story and invented tasks:
 
 ```text
-$ ghp push 12
+$ ghp push 12 --plan-out .ghp/plan-push.md
 # Plan: push tasks to #12 as sub-issues
 create 3 · update 0 · unchanged 0 · orphan 0
 
@@ -45,40 +41,39 @@ create 3 · update 0 · unchanged 0 · orphan 0
 | create | T002 | T002 Show the opening hours | - | new sub-issue of #12 | add to the Project, Todo |
 | create | T003 | T003 Write the page test | - | new sub-issue of #12 | add to the Project, Todo |
 
-$ ghp push 12 --apply
+$ ghp push 12 --apply --expect-plan .ghp/plan-push.md
 created 3, updated 0, failed 0
 ```
 
-Without `--apply` nothing is sent. With it, only the plan you read is written. If the plan changed in between, `ghp` refuses and writes nothing.
+Without `--apply` nothing is sent. `--plan-out` saves the preview; `--expect-plan` checks it again before applying. If the plan changed in between, `ghp` refuses and writes nothing.
 
 ## Why it exists
 
-| The problem | What spec-kit-ghp does about it |
-|---|---|
-| An agent that can write to your board will, sooner or later, create the wrong issues, move the wrong cards or close a story that is not done. | Every write is a **preview you read, then an apply of exactly that preview**. A saved preview is refused if anything changed since. |
-| The spec says "done" one way and the tests say another. | One checklist file per story ties **every acceptance criterion to a test**, and `ghp gate` checks the ties before review. |
-| Turning a plan into sub-issues, board cards, a branch and a pull request is slow, clerical work. | The agent does the clerical work, step by step. You decide at the yellow steps. |
-| An issue is text anyone can edit, and an agent that obeys it is an attack surface. | Text from an issue is **data, never instructions**: the extension's rules tell the agent so, and tell it never to approve for you. |
+Code moves quickly; keeping the record of that work current still takes time. Tasks need issues, issues need board cards, product questions need answers, and a reviewer needs to see what was tested. This kit gives your agent a repeatable way to prepare that work, with a preview before changes reach GitHub.
+
+It helps keep the story, the plan and the board consistent when you run its commands or workflow. It does not continuously audit every card on your board.
 
 ## Why you'll like it
 
-- ✅ **Proof, not promises.** Every acceptance criterion (a line saying what "done" means) is tied to a test that proves it, in one checklist file per story.
-- 🛑 **Nothing happens behind your back.** New issues, comments, card moves and pull requests are shown first and written only after you say yes.
-- 🧾 **A yes belongs to one plan.** An approval is tied to one exact plan, shown as a fingerprint. Change the plan and the old yes no longer counts.
-- 💬 **The right questions get asked up front.** The agent lists what is unclear in the story, you approve what is posted on the issue, and the answers come back into the plan.
-- 🤖 **Built for agents, safe around them.** The agent's rules treat issue text as data. In comment mode, comments from the account that runs `ghp` never count as approvals, so a bot or CI job can do the writing while a person does the approving.
-- 🧩 **Works with your stack.** It uses whatever Spec Kit setup you already have, for any language.
-- 🔒 **Your token stays with `gh`.** `ghp` never reads your token: the GitHub CLI signs in and makes each call.
+| The upkeep | What the agent helps with |
+|---|---|
+| Copying tasks into GitHub | Creates or updates sub-issues from the task list and adds them to your Project. |
+| Keeping the board current | Adds task cards at Todo, moves the story to In Progress, and moves it to Done when you close it. Ticking a task does not close its sub-issue. |
+| Reconstructing a discussion | Records questions, assumptions and decisions, and prepares them for the story issue. |
+| Checking what supports “done” | Keeps a story checklist mapping acceptance criteria to named tests and evidence; configured checks report gaps. |
+| Preparing a review | Builds the pull request description and posts the final checklist when the story is closed. |
+
+You review the preview before the agent writes. Saved plans can be checked again at apply time, so a changed plan needs another review. The optional link-on-merge workflow uses the merge as approval.
 
 ## Is this for you?
 
-**A good fit** if your work lives in GitHub Issues and a Project board owned by your user account, you use (or want to use) an AI coding agent with Spec Kit, and you want the agent to move fast without letting it write to your board unsupervised.
+**A good fit** if your work lives in GitHub Issues and a Project board owned by your user account, you use (or want to use) an AI coding agent with Spec Kit, and want help maintaining the issues, board and delivery documentation.
 
 **Not a fit, today** if your Projects belong to an organisation (refused in this release), if you want a fully hands-off autopilot (every write waits for a yes, by design), or if you track work in another tool. For Azure DevOps or Jira Cloud there are sibling projects, linked [below](#also-for-other-trackers).
 
 ## How it works
 
-From story to open pull request, the agent does the grunt work. You decide at the yellow steps.
+The agent prepares the work and the supporting record. Yellow marks the team’s decisions and approvals.
 
 ```mermaid
 flowchart TD
@@ -264,7 +259,7 @@ More fixes, with example output, are in the [quick start guide](docs/quickstart.
 
 ## Also for other trackers
 
-One idea, three trackers: the agent does the grunt work, you press yes.
+Built and maintained by [Praveen Lavu](https://github.com/praveenlavu), these independent add-ons help agents handle routine delivery work while people make the decisions.
 
 | Your tracker | Project | What it is |
 |---|---|---|
@@ -275,6 +270,9 @@ One idea, three trackers: the agent does the grunt work, you press yes.
 Each is a separate, independent project with its own releases. You only need the one for your tracker.
 
 ---
+
+<details>
+<summary><strong>Full reference: commands, configuration and technical details</strong></summary>
 
 # Full reference
 
@@ -403,6 +401,8 @@ Only GitHub Projects owned by a user account are supported in 0.1. Organisation 
 - [Compatibility](docs/compatibility.md): the versions it needs and was tried on.
 - [Glossary](docs/glossary.md): every term in plain words.
 - [Contributing](CONTRIBUTING.md): how to run the tests and send a change.
+
+</details>
 
 ## Licence
 

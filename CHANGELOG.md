@@ -3,6 +3,10 @@
 All notable changes to `ghp` are listed here, newest first.
 The version number rules are in [VERSIONING.md](VERSIONING.md).
 
+**Unreleased documentation**
+
+- Explain the issue, board and documentation upkeep the agent helps with, add matching family artwork and maintainer credit, and make the full reference expandable. The illustrative apply example now checks a saved preview; tool behavior is unchanged.
+
 ## 0.1.2 (2026-11-15)
 
 A small fix release. Nothing is removed.

@@ -363,7 +363,7 @@ def test_the_honesty_lines_are_pinned():
                    'M --> G{"You approve closing the story"}', "class Q,C,R,M,G you", "The agent's part ends at the open pull request.",
                    "| A guided run from spec to the open pull request, stopping at each approval (Spec Kit workflow) | `ghp-lifecycle` | Works today |",
                    "a GitHub Actions workflow that runs `done` after a merge into the default branch", "the `digest:` line is a fingerprint of this plan",
-                   "**Your AI agent does the GitHub Projects grunt work. You press yes.**",
+                   "**Keep GitHub Projects in step with the work.**",
                    "**GitHub Projects (v2) and GitHub Issues only.** A community project, not an official GitHub product."):
         assert needle in readme, needle
     assert "Works today (not yet run" not in readme and "not yet run in another repository" not in readme  # the CI row claims one run, not more
