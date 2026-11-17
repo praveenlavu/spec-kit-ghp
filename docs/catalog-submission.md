@@ -1,6 +1,6 @@
 # Catalog submission
 
-**Filed on 2026-11-16** from the owner's own `praveenlavu` account, at the owner's instruction: the extension as [github/spec-kit#5441](https://github.com/github/spec-kit/issues/5441), the bundle as [github/spec-kit#5442](https://github.com/github/spec-kit/issues/5442) and the workflow as the pull request [github/spec-kit#5443](https://github.com/github/spec-kit/pull/5443). This page holds the values that were filed. Three boxes of the extension form were left for the reviewers or unticked on purpose: "All commands execute without errors" is not ticked, because not every one of the 13 commands was run on its own on each Spec Kit version.
+**Filed on 2026-11-16** from the owner's own `praveenlavu` account, at the owner's instruction: the extension as [github/spec-kit#5441](https://github.com/github/spec-kit/issues/5441), the bundle as [github/spec-kit#5442](https://github.com/github/spec-kit/issues/5442) and the workflow as the pull request [github/spec-kit#5443](https://github.com/github/spec-kit/pull/5443). This page holds the values that were filed. On 2026-11-17 the extension form's box "All commands execute without errors" was ticked, after each of the 13 commands was run on its own (scenario 8 below); the maintainers' bot then passed the validation and opened the catalog pull requests. State on 2026-11-17: the bundle is merged ([github/spec-kit#5457](https://github.com/github/spec-kit/pull/5457)); the extension's catalog pull request ([#5463](https://github.com/github/spec-kit/pull/5463)) is approved and open; the workflow pull request awaits a review.
 The release `v0.1.2` exists (the first release, `v0.1.0`, was published on 2026-11-12, and `v0.1.1` on 2026-11-13), and its addresses were installed from it (see the Testing Details of each form). The values below are for 0.1.2.
 **0.1.2 differs from 0.1.1 only by a lock in `ghp push --apply` (a second apply of the same story on the same machine waits for the first) and the docs.** Run on 0.1.2 on 2026-11-16: the installs (extension from the download address, pinned install from the catalog, and the bundle, on Spec Kit 1.2.1 and 1.4.0), the bundle validation, build and install by id, the offline test suite, hosted CI, and the live re-run of two simultaneous pushes of one story ([record](https://github.com/praveenlavu/spec-kit-ghp/blob/main/docs/evidence/L-C-R3.md)). Everything else below was run on 0.1.1 and is labelled so.
 Boxes are ticked only for what was done against a published release (0.1.2 where it says so, otherwise 0.1.1); every box left empty is a judgement for the person filing.
@@ -73,7 +73,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 **Testing Checklist** (tick each only after doing it against the published release)
 
 - [x] Extension installs successfully via download URL
-- [ ] All commands execute without errors
+- [x] All commands execute without errors
 - [ ] Documentation is complete and accurate
 - [ ] No security vulnerabilities identified
 - [ ] Tested on at least one real project
@@ -103,6 +103,7 @@ The entries keep `"verified": false`: only the Spec Kit maintainers can verify a
 5. In comment mode on a public test repository, with the Actions bot as the agent: `ghp done` closed a story from an approval comment after `ghp approvals check`, and an edited, rejected, stale or same-account approval was refused
 6. Ran the live test suite against GitHub on 0.1.1: 48 passed; ran the offline test suite in the 0.1.2 export: 7308 passed, 120 skipped (two tests that need a real terminal were run in the foreground, because a background run ignores Ctrl-C)
 7. (0.1.2) Started two `ghp push --apply` of the same story at the same instant on one machine: one made the 3 tasks, the other waited about 22 seconds, found them and wrote nothing; the story has 3 sub-issues (on 0.1.1 the same test made 6)
+8. (0.1.2) Ran each of the 13 slash commands one by one through Claude Code in a new project (Spec Kit 1.2.4.dev0 with the Claude Code integration, ghp 0.1.2 from the v0.1.2 tag, the extension from the release file), against a public test repository and a test Project: setup, constitution, pull, plan, tasks, push, implement, gate, review, pr, status, stack and done. All 13 exited 0 with no tool error; each ran to a preview, a step that waits for a person's confirmation, or a documented refusal (`done` refused because the checklist was not ready). Not run in this pass: the apply (write) side of push, pr and done, and Spec Kit 1.4.0; scenarios 3 and 5 cover those.
 ```
 
 **Example Usage**

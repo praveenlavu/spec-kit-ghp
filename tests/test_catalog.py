@@ -365,9 +365,9 @@ def test_the_catalog_wording_says_main_not_the_tag():
 
 
 def test_only_the_boxes_that_were_really_done_are_ticked():
-    """A tick is a claim about the published release; the judgements (documentation, security, gate wording, the catalog pull request) stay empty."""
+    """A tick is a claim about the published release; the judgements (documentation, security, gate wording, the catalog pull request) stay empty. "All commands execute without errors" was ticked on 2026-11-17 after the 13-command run."""
     t = _text(DRAFT)
     empty = [l[6:] for l in t.splitlines() if l.startswith("- [ ] ")]
-    assert sorted(empty) == sorted(["All commands execute without errors", "Documentation is complete and accurate", "No security vulnerabilities identified",
+    assert sorted(empty) == sorted(["Documentation is complete and accurate", "No security vulnerabilities identified",
         "Tested on at least one real project", "All gate steps have clear review messages", "Input prompts are descriptive",
         "Added to workflows/catalog.community.json (alphabetical order)", "Documentation is complete and accurate"])
